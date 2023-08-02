@@ -1,5 +1,8 @@
-use std::net::Ipv4Addr;
+use std::net::{SocketAddrV4, IpAddr, Ipv4Addr, SocketAddr, TcpStream};
 use std::str::FromStr;
+use std::io::{Read, Write};
+use ipnetwork::Ipv4Network;
+use socket2::{Socket, Domain, Type};
 
 pub fn get_ip() -> Option<Ipv4Addr> {
     // use std::io::Error;
@@ -51,4 +54,62 @@ pub fn calculate_broadcast_address(ip: Ipv4Addr, subnet_mask: Ipv4Addr) -> Optio
     // Add some checks for making sure that Some does include the broadcast address
 
     Some(broadcast_address)
+}
+
+pub fn fetch_devices_from_broadcast(broadcast_ip: Ipv4Addr) -> Option<Vec<SocketAddrV4>> {
+    // Create UDP socket
+    let socket = Socket::new(Domain::IPV4, Type::DGRAM, None).expect("Failed to create socket");
+
+    let broadcast_socket = SocketAddr::new(IpAddr::from_str("0.0.0.0").unwrap(), 0);
+    socket.bind(&broadcast_socket.into()).expect("Failed to bind socket");
+
+    // Enable SO_BROADCAST option to allow sending to the broadcast address
+    socket.set_broadcast(true).expect("Failed to set socket broadcast option");
+
+    // Get the network prefix from the broadcast address
+    let network_prefix = broadcast_ip.octets();
+    let network_prefix: Ipv4Addr = Ipv4Addr::new(network_prefix[0], network_prefix[1], network_prefix[2], 0);
+    let network = Ipv4Network::new(network_prefix, 24).expect("Invalid network prefix");
+
+    // Variable that will store the possible IPs that needs to be checked
+    let mut ip_list: Vec<SocketAddrV4> = Vec::new();
+
+    // Iterate through all possible host addresses in the network
+    for host in network.iter() {
+        // Skip the broadcast address and the network address itself
+        if host == network.network() || host == broadcast_ip {
+            continue;
+        }
+
+        // Add the host address to the list
+        let socket_address: SocketAddrV4 = SocketAddrV4::new(host, 0).into();
+        ip_list.push(socket_address);
+    }
+
+    let mut error_counter: u8 = 0;
+    let mut usable_addresses: Vec<SocketAddrV4> = Vec::new();
+
+    // Check which IPs are possibly usable.
+    for address in &ip_list {
+        // If the connection cannot be created the TcpStream will panic.
+        match TcpStream::connect(address) {
+            Ok(mut stream) => {
+                let request = format!("GET / HTTP/1.1\r\nHost: {:?}\r\nConnection: close\r\n\r\n", address);
+                stream.write_all(request.as_bytes()).expect("Failed to send request");
+            
+                let mut response = String::new();
+                stream.read_to_string(&mut response).expect("Failed to read response");
+            
+                usable_addresses.push(*address);
+                println!("RESPONSE:\n{}", response);
+            }
+            Err(_error) => {
+                // eprintln!("Not an usable address:\n{error}");
+                error_counter += 1;
+            }
+        };
+    }
+
+    println!("Error counter ({})", error_counter);
+    Some(usable_addresses)
 }
