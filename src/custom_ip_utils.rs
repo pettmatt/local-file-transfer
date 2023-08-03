@@ -30,7 +30,7 @@ pub fn get_ip() -> Option<Ipv4Addr> {
         let ip = lines[1].trim();
 
         // Because the ip address includes some unwanted 
-        // characters we need to trim them out.
+        // characters we need to trim them out
         let matches: &[_] = &['{', '}', '"'];
         let trimmed_ip = ip.trim_matches(matches);
 
@@ -56,14 +56,14 @@ pub fn calculate_broadcast_address(ip: Ipv4Addr, subnet_mask: Ipv4Addr) -> Optio
     Some(broadcast_address)
 }
 
-pub fn fetch_devices_from_broadcast(broadcast_ip: Ipv4Addr) -> Option<Vec<SocketAddrV4>> {
+pub fn fetch_device_ips_from_broadcast(broadcast_ip: Ipv4Addr) -> Option<Vec<SocketAddrV4>> {
     // Create UDP socket
     let socket = Socket::new(Domain::IPV4, Type::DGRAM, None).expect("Failed to create socket");
 
     let broadcast_socket = SocketAddr::new(IpAddr::from_str("0.0.0.0").unwrap(), 0);
     socket.bind(&broadcast_socket.into()).expect("Failed to bind socket");
 
-    // Enable SO_BROADCAST option to allow sending to the broadcast address
+    // Enable BROADCAST option to allow sending to the broadcast address
     socket.set_broadcast(true).expect("Failed to set socket broadcast option");
 
     // Get the network prefix from the broadcast address
@@ -91,25 +91,24 @@ pub fn fetch_devices_from_broadcast(broadcast_ip: Ipv4Addr) -> Option<Vec<Socket
 
     // Check which IPs are possibly usable.
     for address in &ip_list {
-        // If the connection cannot be created the TcpStream will panic.
+        // Handling panic in case connection fails, which it will
         match TcpStream::connect(address) {
             Ok(mut stream) => {
                 let request = format!("GET / HTTP/1.1\r\nHost: {:?}\r\nConnection: close\r\n\r\n", address);
                 stream.write_all(request.as_bytes()).expect("Failed to send request");
-            
+
                 let mut response = String::new();
                 stream.read_to_string(&mut response).expect("Failed to read response");
-            
+
                 usable_addresses.push(*address);
-                println!("RESPONSE:\n{}", response);
+                println!("RESPONSE:\n{}", response); // Remove later
             }
             Err(_error) => {
-                // eprintln!("Not an usable address:\n{error}");
                 error_counter += 1;
             }
         };
     }
 
-    println!("Error counter ({})", error_counter);
+    println!("Error counter: {}", error_counter);
     Some(usable_addresses)
 }

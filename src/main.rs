@@ -1,6 +1,6 @@
 use std::net::Ipv4Addr;
 use std::str::FromStr;
-use ip_utils::{get_ip, calculate_broadcast_address, fetch_devices_from_broadcast};
+use ip_utils::{get_ip, calculate_broadcast_address, fetch_device_ips_from_broadcast};
 
 fn main() {
     let ip_address: Ipv4Addr = get_ip().unwrap();
@@ -11,7 +11,7 @@ fn main() {
     println!("NETWORK {:?}", ip_address);
 
     let devices: Option<_> = match broadcast_address {
-        Some(address) => fetch_devices_from_broadcast(address),
+        Some(address) => fetch_device_ips_from_broadcast(address),
         _ => None
     };
 
