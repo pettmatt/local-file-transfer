@@ -9,7 +9,3 @@ edition = "2021"
 dotenv = "0.15.0"
 ipnetwork = "0.20.0"
 socket2 = "0.5.3"
-
-[lib]
-name = "ip_utils"
-path = "src/custom_ip_utils.rs"

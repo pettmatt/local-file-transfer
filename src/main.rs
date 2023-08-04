@@ -1,6 +1,9 @@
 use std::net::Ipv4Addr;
 use std::str::FromStr;
-use ip_utils::{get_ip, calculate_broadcast_address, fetch_device_ips_from_broadcast};
+use custom_ip_utils::{get_ip, calculate_broadcast_address, fetch_device_ips_from_broadcast};
+mod custom_ip_utils;
+use server::setup_server;
+mod server;
 
 fn main() {
     let ip_address: Ipv4Addr = get_ip().unwrap();
@@ -16,4 +19,7 @@ fn main() {
     };
 
     println!("DEVICES {:?}", devices);
+
+    println!("Setup server");
+    setup_server();
 }
