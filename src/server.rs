@@ -1,4 +1,4 @@
-use std::{fs, env, thread};
+use std::{fs, env};
 use std::io::{prelude::*, BufReader};
 use std::net::{TcpListener, TcpStream};
 use dotenv::dotenv;
