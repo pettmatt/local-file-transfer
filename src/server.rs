@@ -87,7 +87,7 @@ fn send_file_to_address(address: &'static str) -> io::Result<()> {
 
     let data = b"Hello";
     stream.write_all(data).expect("Couldn't buffer or validate the data");
-    stream.flush().expect("Cloudn't finish streaming the data");
+    stream.flush().expect("Couldn't finish sending the data");
 
     Ok(())
 }
