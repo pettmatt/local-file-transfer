@@ -1,4 +1,5 @@
 use std::{fs, env};
+use std::io::{self, Write};
 use std::io::{prelude::*, BufReader};
 use std::net::{TcpListener, TcpStream};
 use dotenv::dotenv;
@@ -6,6 +7,7 @@ use dotenv::dotenv;
 use custom_thread::ThreadPool;
 mod custom_thread;
 
+// Handling backend of the user device
 pub fn setup_server() {
     dotenv().ok();
 
@@ -26,25 +28,28 @@ pub fn setup_server() {
     }
 }
 
+// Handling connections of the user (frontend activities) and possible devices in the network.
 fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
     let request_line = buf_reader.lines().next().unwrap().unwrap();
 
     let (status_line, filename) = match &request_line[..] {
         "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "index.html"),
-        "GET /ping HTTP/1.1" => ("HTTP/1.1 200 OK", ""),
+        "GET /ping HTTP/1.1" => ("HTTP/1.1 200 OK", "{\"message\": \"pong\"}"),
+        "GET /process_file HTTP/1.1" => ("", ""),
+        "POST /send HTTP/1.1" => handle_sending_file(),
         _ => ("HTTP/1.1 404 NOT FOUND", "404.html")
     };
 
-    let mut contents = String::new();
+    let mut contents = filename.to_string();
 
     match fs::read_to_string(filename) {
         Ok(string) => {
-            println!("PATH {:?}", string);
             contents = string;
         }
-        Err(error) => {
-            println!("The file doesn't exist: {}", error);
+        Err(_error) => {
+            // If the file couldn't be found, the value is probably JSON object and should be kept as is.
+            // println!("The file doesn't exist: {}", _error);
         }
     }
 
@@ -53,4 +58,36 @@ fn handle_connection(mut stream: TcpStream) {
 
     stream.write_all(response.as_bytes()).unwrap();
     stream.flush().unwrap();
+}
+
+// Handling communication between host and other devices.
+// Currently limited to sending files.
+fn handle_sending_file() -> (&'static str, &'static str) {
+    let response: Result<(), io::Error> = send_file_to_address("127.0.0.1:7878");
+
+    let (mut status, mut message) = ("HTTP/1.1 200 OK", "Data was successfully delivered.");
+
+    // Successful response when file has been sent successfully
+    match response {
+        Ok(res) => {
+            println!("Data was successfully delivered.\r{:?}", res);
+        }
+        Err(error) => {
+            println!("Error occured:\n{}", error);
+            status = "HTTP/1.1 500 Internal Server Error";
+            message = "Couldn't send the file";
+        }
+    }
+
+    (status, message)
+}
+
+fn send_file_to_address(address: &'static str) -> io::Result<()> {
+    let mut stream = TcpStream::connect(address).expect("Couldn't create TCP connection");
+
+    let data = b"Hello";
+    stream.write_all(data).expect("Couldn't buffer or validate the data");
+    stream.flush().expect("Cloudn't finish streaming the data");
+
+    Ok(())
 }

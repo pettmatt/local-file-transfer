@@ -86,11 +86,18 @@ pub fn fetch_device_ips_from_broadcast(broadcast_ip: Ipv4Addr) -> Option<Vec<Soc
         ip_list.push(socket_address);
     }
 
+    let (error_counter, usable_addresses) = check_connectivity_with_ip_addresses(ip_list);
+
+    println!("Error counter: {}", error_counter);
+    Some(usable_addresses)
+}
+
+fn check_connectivity_with_ip_addresses(ip_list: Vec<SocketAddrV4>) -> (u8, Vec<SocketAddrV4>) {
     let mut error_counter: u8 = 0;
     let mut usable_addresses: Vec<SocketAddrV4> = Vec::new();
 
     // Check which IPs are possibly usable.
-    for address in &ip_list {
+    for address in ip_list {
         // Handling panic in case connection fails, which it will
         match TcpStream::connect(address) {
             Ok(mut stream) => {
@@ -100,8 +107,8 @@ pub fn fetch_device_ips_from_broadcast(broadcast_ip: Ipv4Addr) -> Option<Vec<Soc
                 let mut response = String::new();
                 stream.read_to_string(&mut response).expect("Failed to read response");
 
-                usable_addresses.push(*address);
-                println!("RESPONSE:\n{}", response); // Remove later
+                usable_addresses.push(address);
+                println!("RESPONSE:\n{}", response);
             }
             Err(_error) => {
                 error_counter += 1;
@@ -109,6 +116,5 @@ pub fn fetch_device_ips_from_broadcast(broadcast_ip: Ipv4Addr) -> Option<Vec<Soc
         };
     }
 
-    println!("Error counter: {}", error_counter);
-    Some(usable_addresses)
+    (error_counter, usable_addresses)
 }
