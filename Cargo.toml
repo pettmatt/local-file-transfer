@@ -8,4 +8,6 @@ edition = "2021"
 [dependencies]
 dotenv = "0.15.0"
 ipnetwork = "0.20.0"
+serde = "1.0"
+serde_derive = "1.0"
 socket2 = "0.5.3"
