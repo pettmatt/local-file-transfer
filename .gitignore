@@ -1,3 +1,10 @@
 /target
 .vscode
 .env
+
+/file_tests
+*.pdf
+*.mp4
+*.txt
+*.png
+*.jpg
