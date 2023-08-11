@@ -20,6 +20,5 @@ fn main() {
 
     println!("DEVICES {:?}", devices);
 
-    println!("Setup server");
     setup_server();
 }
