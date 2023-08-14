@@ -4,19 +4,12 @@ use std::io::{prelude::*, BufReader};
 use std::net::{TcpListener, TcpStream};
 use dotenv::dotenv;
 
-mod custom_thread;
 use custom_thread::ThreadPool;
-pub mod custom_file;
 use custom_file::FileObject;
-mod process_http_request;
 use process_http_request::{fetch_details_from_request, handle_http_request};
-
-// mod server {
-//     pub mod custom_file;
-//     pub mod process_http_request {
-//         pub mod process_file;
-//     }
-// }
+mod custom_thread;
+pub mod custom_file;
+mod process_http_request;
 
 // Handling backend of the user device
 pub fn setup_server() {

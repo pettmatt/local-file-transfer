@@ -1,8 +1,8 @@
 use std::net::Ipv4Addr;
 use std::str::FromStr;
 use custom_ip_utils::{get_ip, calculate_broadcast_address, fetch_device_ips_from_broadcast};
-mod custom_ip_utils;
 use server::setup_server;
+mod custom_ip_utils;
 mod server;
 
 fn main() {
