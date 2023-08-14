@@ -1,24 +1,35 @@
-use std::net::Ipv4Addr;
-use std::str::FromStr;
-use custom_ip_utils::{get_ip, calculate_broadcast_address, fetch_device_ips_from_broadcast};
-use server::setup_server;
-mod custom_ip_utils;
-mod server;
+use yew::prelude::*;
+
+use components::DeviceDetails;
+use components::FileDetails;
+pub use models::Device;
+pub use models::File;
+mod components;
+mod models;
+
+#[function_component(App)]
+fn app() -> Html {
+    let devices: Vec<Device> = vec![
+        Device {
+            id: 0,
+            local_ip: "test 01".to_string()
+        },
+        Device {
+            id: 1,
+            local_ip: "test 02".to_string()
+        }
+    ];
+
+    html! {
+        <>
+        <h1>{ "Hello World" }</h1>
+
+        <DeviceDetails devices={ devices.clone() } />
+        <FileDetails />
+        </>
+    }
+}
 
 fn main() {
-    let ip_address: Ipv4Addr = get_ip().unwrap();
-    let subnet_mask: Ipv4Addr = Ipv4Addr::from_str("255.255.255.255").unwrap();
-
-    let broadcast_address: Option<Ipv4Addr> = calculate_broadcast_address(ip_address, subnet_mask);
-    println!("IS LOCAL {}", ip_address.is_private());
-    println!("NETWORK {:?}", ip_address);
-
-    let devices: Option<_> = match broadcast_address {
-        Some(address) => fetch_device_ips_from_broadcast(address),
-        _ => None
-    };
-
-    println!("DEVICES {:?}", devices);
-
-    setup_server();
+    yew::Renderer::<App>::new().render();
 }
