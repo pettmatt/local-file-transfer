@@ -1,11 +1,11 @@
 use yew::prelude::*;
-
-use components::DeviceDetails;
-use components::FileDetails;
+use crate::components::device_list::DeviceDetails;
+use crate::components::file_list::FileDetails;
 pub use models::Device;
 pub use models::File;
 mod components;
 mod models;
+mod stores;
 
 #[function_component(App)]
 fn app() -> Html {
@@ -24,8 +24,8 @@ fn app() -> Html {
         <>
         <h1>{ "Hello World" }</h1>
 
-        <DeviceDetails devices={ devices.clone() } />
-        <FileDetails />
+        <DeviceDetails { devices } />
+        // <FileDetails { devices } />
         </>
     }
 }

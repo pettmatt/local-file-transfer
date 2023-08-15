@@ -1,18 +1,21 @@
 use yew::prelude::*;
+use yew::prelude::Properties;
+use yewdux::prelude::use_store;
 use crate::models::Device;
+// use crate::stores::DeviceStore;
+
+#[derive(Clone, Properties, PartialEq)]
+pub struct Props {
+    pub devices: Vec<Device>
+}
 
 #[function_component(DeviceDetails)]
-pub fn device_details_in_network(devices: &Vec<&Device>) -> Html {
-    let mut select_list: Vec<Device> = Vec::new();
-
-    fn handle_select(device_id: usize) {
-        select_list.push(&devices[device_id]);
-    }
+pub fn device_details(props: &Props) -> Html {
+    let devices: &Vec<Device> = &props.devices;
 
     let devices_listed = devices.iter().map(|device| html! {
-        <button onclick={ handle_select(device.id) } key={ device.id }>
-            { format!("{}", device.local_ip) }
-        </button>
+        // <DeviceItem device={device} />
+        <h3 key={ device.id }>{ "Device item" }</h3>
     }).collect::<Html>();
 
     html! {
@@ -30,5 +33,17 @@ pub fn device_details_in_network(devices: &Vec<&Device>) -> Html {
                 </p>
             }
         </div>
+    }
+}
+
+#[function_component(DeviceItem)]
+fn device_item(device: &Device) -> Html {
+    // let (store, dispatch) = use_store::<DeviceStore>();
+    // println!("DEVICE STORE {:?}", store);
+
+    html! {
+        <button key={ device.id }>
+            { format!("{}", device.local_ip) }
+        </button>
     }
 }
