@@ -1,6 +1,6 @@
 use yew::prelude::*;
-use crate::components::device_list::DeviceDetails;
-use crate::components::file_list::FileDetails;
+use crate::components::device_list::DeviceList;
+use crate::components::file_list::FileList;
 pub use models::Device;
 pub use models::File;
 mod components;
@@ -24,8 +24,8 @@ fn app() -> Html {
         <>
         <h1>{ "Hello World" }</h1>
 
-        <DeviceDetails { devices } />
-        // <FileDetails { devices } />
+        <DeviceList devices={ devices.clone() } />
+        <FileList devices={ devices.clone() } files={ vec![] } />
         </>
     }
 }

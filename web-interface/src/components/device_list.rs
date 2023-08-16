@@ -1,25 +1,24 @@
 use yew::prelude::*;
 use yew::prelude::Properties;
-use yewdux::prelude::use_store;
 use crate::models::Device;
+// use yewdux::prelude::use_store;
 // use crate::stores::DeviceStore;
 
 #[derive(Clone, Properties, PartialEq)]
-pub struct Props {
+pub struct DeviceListProps {
     pub devices: Vec<Device>
 }
 
-#[function_component(DeviceDetails)]
-pub fn device_details(props: &Props) -> Html {
-    let devices: &Vec<Device> = &props.devices;
+#[function_component(DeviceList)]
+pub fn device_list(props: &DeviceListProps) -> Html {
+    let devices = &props.devices;
 
     let devices_listed = devices.iter().map(|device| html! {
-        // <DeviceItem device={device} />
-        <h3 key={ device.id }>{ "Device item" }</h3>
+        <DeviceItem { device } />
     }).collect::<Html>();
 
     html! {
-        <div class="list-container">
+        <div class="device-container list">
             if devices.len() > 0 {
                 { devices_listed }
             }
@@ -36,10 +35,15 @@ pub fn device_details(props: &Props) -> Html {
     }
 }
 
+#[derive(Clone, Properties, PartialEq)]
+pub struct DeviceItemProps {
+    pub device: Device
+}
+
 #[function_component(DeviceItem)]
-fn device_item(device: &Device) -> Html {
+fn device_item(props: &DeviceItemProps) -> Html {
+    let device = &props.device;
     // let (store, dispatch) = use_store::<DeviceStore>();
-    // println!("DEVICE STORE {:?}", store);
 
     html! {
         <button key={ device.id }>
