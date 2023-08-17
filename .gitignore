@@ -8,3 +8,6 @@
 *.txt
 *.png
 *.jpg
+
+web-interface/target
+web-interface/dist

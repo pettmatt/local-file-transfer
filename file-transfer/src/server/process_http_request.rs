@@ -1,9 +1,14 @@
 use std::io::{prelude::*, BufReader};
-use std::net::TcpStream;
+use std::net::{TcpStream, Ipv4Addr};
+use std::str::FromStr;
 use std::fs;
+use serde_json::Value;
 
 mod process_file;
 use process_file::handle_sending_file;
+
+// mod custom_ip_utils;
+// use custom_ip_utils::{get_ip, calculate_broadcast_address, fetch_device_ips_from_broadcast};
 
 pub use super::custom_file::FileObject;
 
@@ -35,12 +40,24 @@ pub fn fetch_details_from_request(mut reader: BufReader<&mut TcpStream>) -> (Vec
 }
 
 pub fn handle_http_request(request_line: &str, body: String) -> String {
+    let body_json = serde_json::from_str(&body).expect("Couldn't convert string to JSON");
     let request = String::from(request_line);
 
     let (status_line, filename) = match &request[..] {
         "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "index.html"),
         "GET /ping HTTP/1.1" => ("HTTP/1.1 200 OK", "{\"message\": \"pong\"}"),
-        "POST /send HTTP/1.1" => handle_sending_file(body),
+        "POST /send HTTP/1.1" => handle_sending_file(body_json),
+        // "POST /get-devices HTTP/1.1" => {
+        //     let ip_address: Ipv4Addr = get_ip().unwrap();
+        //     let subnet_mask: Ipv4Addr = Ipv4Addr::from_str("255.255.255.255").unwrap();
+        
+        //     let broadcast_address: Option<Ipv4Addr> = calculate_broadcast_address(ip_address, subnet_mask);
+
+        //     match body {
+        //         Some(address) => fetch_device_ips_from_broadcast(body_json),
+        //         _ => None
+        //     }
+        // },
         _ => ("HTTP/1.1 404 NOT FOUND", "404.html")
     };
 

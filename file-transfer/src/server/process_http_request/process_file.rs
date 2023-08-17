@@ -9,11 +9,9 @@ use super::FileObject;
 
 // Handling communication between host and other devices.
 // Currently limited to sending text files.
-pub fn handle_sending_file(file_details: String) -> (&'static str, &'static str) {
-    let file_json: Value = serde_json::from_str(&file_details).expect("Couldn't convert string to JSON");
-
+pub fn handle_sending_file(file_details: Value) -> (&'static str, &'static str) {
     // let path = file_json["path"].as_str().expect("Path not found");
-    let name = file_json["name"].as_str().expect("Name not found");
+    let name = file_details["name"].as_str().expect("Name not found");
     let file_name = format!("{name}");
     println!("read file named {}", file_name);
 

@@ -58,7 +58,7 @@ fn handle_connection(mut stream: TcpStream) {
         }
         _ => {
             let received_file = FileObject::parse(&request_line);
-            println!("Handling file {:?}", received_file);
+            // println!("Handling file {:?}", received_file);
 
             // This approach works well with text files, but it needs some tweaking
             match fs::write(format!("file_tests/{}", received_file.name), received_file.content) {
@@ -67,7 +67,7 @@ fn handle_connection(mut stream: TcpStream) {
             }
 
             let message = "Received a file";
-            println!("Message: {:?}", message);
+            // println!("Message: {:?}", message);
             format!("{:?}", message)
         }
     };
