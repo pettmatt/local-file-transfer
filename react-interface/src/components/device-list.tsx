@@ -1,21 +1,16 @@
-import { useState } from "react"
+import { List, ListItem, ListItemText} from "@mui/material"
 
-interface DeviceListProps {
+interface Props {
     devices: Array<object>
 }
 
-const DeviceList = (props: DeviceListProps) => {
-    const [devices, setDevices] = useState(props.devices)
-
-    const devicesListed = devices.map(device => (
-        <DeviceItem key={ device.id } device={ device } />
-    ))
+const DeviceList = (props: Props) => {
 
     return (
         <div className="section-container">
-            { devices.length > 0 ? (
+            { props.devices.length > 0 ? (
                 <div className="list-container">
-                    { devicesListed }
+                    <CustomList array={ props.devices } />
                 </div>
             )
             :
@@ -33,19 +28,22 @@ const DeviceList = (props: DeviceListProps) => {
     )
 }
 
-interface DeviceItemProps {
-    device: object
+interface ListProps {
+    array: Array<object>
 }
 
-const DeviceItem = (props: DeviceItemProps) => {
-    const [device, setDevice] = useState(props.device)
-
-    const handleVerify = () => { console.log("Clicked") }
+const CustomList = (props: ListProps) => {
+    
+    const itemList = props.array.map((item, index) => (
+        <ListItem disablePadding key={ index }>
+            <ListItemText primary={ item.name } />
+        </ListItem>
+    ))
 
     return (
-        <button key={ device.id } onClick={ handleVerify }>
-            { device.localIp }
-        </button>
+        <List>
+            { itemList }
+        </List>
     )
 }
 

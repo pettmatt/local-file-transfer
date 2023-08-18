@@ -1,24 +1,49 @@
-import DeviceList from "./components/device-list"
+import { ReactNode } from "react"
 import FileList from "./components/file-list"
+import DeviceList from "./components/device-list"
+import FileReceiver from "./components/file-receiver"
+import ExtendableContainer from "./components/custom-components/extendable-container"
+import AutoExtendableContainer from "./components/custom-components/auto-extendable-container"
 
 const App = () => {
   const devices = [
     {
-        id: 0,
-        localIp: "test 01"
+      name: "test 01"
     },
     {
-        id: 1,
-        localIp: "test 02"
+      name: "test 02"
     }
-  ];
+  ]
+
+  const filesReceived = []
+
+  const fileReceiverHeader: ReactNode = (
+    <h2>Files received</h2>
+  )
+
+  const deviceListsHeader: ReactNode = (
+    <h2>Devices</h2>
+  )
+
+  const fileListsHeader: ReactNode = (
+    <h2>Files</h2>
+  )
 
   return (
     <>
       <h1>Transfer file application</h1>
 
-      <DeviceList devices={ devices } />
-      <FileList devices={ devices } files={ [] } />
+      <AutoExtendableContainer header={ fileReceiverHeader } manualSwitch={ false }>
+        <FileReceiver fileReceived={ filesReceived } />
+      </AutoExtendableContainer>
+
+      <ExtendableContainer header={ deviceListsHeader }>
+        <DeviceList devices={ devices } />
+      </ExtendableContainer>
+
+      <ExtendableContainer header={ fileListsHeader }>
+        <FileList devices={ devices } files={ [] } />
+      </ExtendableContainer>
     </>
   )
 }
