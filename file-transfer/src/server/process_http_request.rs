@@ -40,7 +40,11 @@ pub fn fetch_details_from_request(mut reader: BufReader<&mut TcpStream>) -> (Vec
 }
 
 pub fn handle_http_request(request_line: &str, body: String) -> String {
-    let body_json = serde_json::from_str(&body).expect("Couldn't convert string to JSON");
+    let body_json: Value = match serde_json::from_str(&body) {
+        Ok(value) => value,
+        Err(error) => Value::Null
+    };
+
     let request = String::from(request_line);
 
     let (status_line, filename) = match &request[..] {

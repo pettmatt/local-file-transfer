@@ -10,7 +10,6 @@ const ExtendableContainer: React.FC<Props> = (props: Props) => {
     const [display, setDisplay] = useState(false)
 
     const handleToggle = () => {
-        console.log("CLICK", display)
         setDisplay((value) => !value)
     }
 

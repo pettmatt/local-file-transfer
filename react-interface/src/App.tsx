@@ -5,6 +5,8 @@ import FileReceiver from "./components/file-receiver"
 import ExtendableContainer from "./components/custom-components/extendable-container"
 import AutoExtendableContainer from "./components/custom-components/auto-extendable-container"
 
+import * as http from "./services/http-requests"
+
 const App = () => {
   const devices = [
     {
@@ -28,6 +30,8 @@ const App = () => {
   const fileListsHeader: ReactNode = (
     <h2>Files</h2>
   )
+
+  console.log("HTTP test", http.request("127.0.0.1:7878/ping"))
 
   return (
     <>
