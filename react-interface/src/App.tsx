@@ -31,7 +31,8 @@ const App = () => {
     <h2>Files</h2>
   )
 
-  console.log("HTTP test", http.request("127.0.0.1:7878/ping"))
+  const requestResponse = http.request("http://127.0.0.1:7878/ping")
+  console.log("HTTP test", requestResponse)
 
   return (
     <>

@@ -28,7 +28,7 @@ pub fn setup_server() {
 
             for stream in listener.incoming() {
                 let stream = stream.unwrap();
-        
+
                 pool.execute(|| {
                     handle_connection(stream);
                 })
