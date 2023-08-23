@@ -6,10 +6,12 @@ use std::io;
 
 // Which ever file is using process_file needs to make sure that they also import FileObject
 use super::FileObject;
+use hyper::{Body, Request, Response, Server};
+
 
 // Handling communication between host and other devices.
 // Currently limited to sending text files.
-pub fn handle_sending_file(file_details: Value) -> (&'static str, &'static str) {
+pub fn handle_sending_file(file_details: Value) -> Result<Response<Body>, hyper::Error> {
     // let path = file_json["path"].as_str().expect("Path not found");
     let name = file_details["name"].as_str().expect("Name not found");
     let file_name = format!("{name}");
@@ -20,7 +22,7 @@ pub fn handle_sending_file(file_details: Value) -> (&'static str, &'static str) 
     println!("file contents {:?}", file_object);
 
     let response: Result<(), io::Error> = send_file_to_address("127.0.0.1:7878", file_object);
-    let (mut status, mut message) = ("HTTP/1.1 200 OK", "Data was successfully delivered.");
+    let (mut status, mut message) = (200, "Data was successfully delivered.");
 
     // Successful response when file has been sent successfully
     match response {
@@ -29,12 +31,17 @@ pub fn handle_sending_file(file_details: Value) -> (&'static str, &'static str) 
         }
         Err(error) => {
             println!("Error occured:\n{}", error);
-            status = "HTTP/1.1 500 Internal Server Error";
+            status = 500;
             message = "Couldn't send the file";
         }
     }
 
-    (status, message)
+    let response = Response::builder()
+        .header(hyper::header::CONTENT_TYPE, "text/json")
+        .body(Body::from(message))
+        .unwrap();
+
+    Ok(response)
 }
 
 fn read_file_utf16(filename: &str) -> Result<String, io::Error> {

@@ -1,75 +1,61 @@
-use std::io::{prelude::*, BufReader};
-use std::net::{TcpStream, Ipv4Addr};
-use std::str::FromStr;
 use std::fs;
 use serde_json::Value;
-
 mod process_file;
 use process_file::handle_sending_file;
-
-// mod custom_ip_utils;
-// use custom_ip_utils::{get_ip, calculate_broadcast_address, fetch_device_ips_from_broadcast};
+use hyper::{Body, Request, Response};
+use hyper::header::HeaderValue;
 
 pub use super::custom_file::FileObject;
 
-pub fn fetch_details_from_request(mut reader: BufReader<&mut TcpStream>) -> (Vec<String>, usize, String) {
-    // Read the headers
-    let mut headers = Vec::new();
-    loop {
-        let mut line = String::new();
-        reader.read_line(&mut line).expect("Couldn't read header line");
-        if line == "\r\n" {
-            break;
-        }
-        headers.push(line);
+pub async fn handle_request(request: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+    println!("REQUEST");
+    match (request.method(), request.uri().path()) {
+        (&hyper::Method::GET, "/") => send_file_to_client("index.html"),
+        (&hyper::Method::GET, "/ping") => send_json_object("{\"message\": \"pong\"}"),
+        (&hyper::Method::POST, "/send-file") => {
+            let file_body = get_request_body(request).await;
+            handle_sending_file(file_body)
+        },
+        _ => send_file_to_client("404.html")
     }
-
-    // Extract content length from headers
-    let content_length: usize = headers.iter()
-        .find(|header| header.to_lowercase().starts_with("content-length"))
-        .and_then(|header: &String| header.split(':').nth(1))
-        .and_then(|length| length.trim().parse().ok())
-        .unwrap_or(0);
-
-    // Get body of the request. We need to define the length of the content so the server won't be stuck
-    let mut body = vec![0u8; content_length];
-    reader.read_exact(&mut body).expect("Couldn't read body");
-    let body_string = String::from_utf8_lossy(&body).into_owned();
-
-    (headers, content_length, body_string)
 }
 
-pub fn handle_http_request(request_line: &str, body: String) -> String {
-    let body_json: Value = match serde_json::from_str(&body) {
+async fn get_request_body(request: Request<Body>) -> Value {
+    let body = hyper::body::to_bytes(request.into_body()).await.unwrap();
+    let body_string = String::from_utf8_lossy(&body).to_string();
+
+    let body_json: Value = match serde_json::from_str(&body_string) {
         Ok(value) => value,
         Err(error) => Value::Null
     };
 
-    let request = String::from(request_line);
+    body_json
+}
 
-    let (status_line, filename) = match &request[..] {
-        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "index.html"),
-        "GET /ping HTTP/1.1" => ("HTTP/1.1 200 OK", "{\"message\": \"pong\"}"),
-        "POST /send HTTP/1.1" => handle_sending_file(body_json),
-        // "POST /get-devices HTTP/1.1" => {
-        //     let ip_address: Ipv4Addr = get_ip().unwrap();
-        //     let subnet_mask: Ipv4Addr = Ipv4Addr::from_str("255.255.255.255").unwrap();
-        
-        //     let broadcast_address: Option<Ipv4Addr> = calculate_broadcast_address(ip_address, subnet_mask);
+fn send_json_object(json_string: &str) -> Result<Response<Body>, hyper::Error> {
+    let response = Response::builder()
+        .header(
+            hyper::header::ACCESS_CONTROL_ALLOW_ORIGIN,
+            HeaderValue::from_static("http://localhost:5173")
+        )
+        .header(
+            hyper::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+            HeaderValue::from_static("true")
+        )
+        .header("Content-Type", "text/json")
+        .header("content-length", json_string.len())
+        .body(Body::from(json_string.to_string()))
+        .unwrap();
 
-        //     match body {
-        //         Some(address) => fetch_device_ips_from_broadcast(body_json),
-        //         _ => None
-        //     }
-        // },
-        _ => ("HTTP/1.1 404 NOT FOUND", "404.html")
-    };
+    Ok(response)
+}
 
-    let mut contents = filename.to_string();
+fn send_file_to_client(file_path: &str) -> Result<Response<Body>, hyper::Error> {
+    let mut contents = String::new();
 
-    match fs::read_to_string(filename) {
-        Ok(string) => {
-            contents = string;
+    match fs::read_to_string(file_path) {
+        Ok(file_contents) => {
+            contents = file_contents;
         }
         Err(_error) => {
             // If the file couldn't be found, the value is probably JSON object and should be kept as is.
@@ -77,8 +63,27 @@ pub fn handle_http_request(request_line: &str, body: String) -> String {
         }
     }
 
-    let length = contents.len();
-    let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+    let response = Response::builder()
+        .header(
+            hyper::header::ACCESS_CONTROL_ALLOW_ORIGIN,
+            HeaderValue::from_static("http://localhost:5173")
+        )
+        .header(
+            hyper::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+            HeaderValue::from_static("true")
+        )
+        .header("Content-Type", "text/json")
+        .header("content-length", contents.len())
+        .body(Body::from(contents))
+        .unwrap();
 
-    return response
+    Ok(response)
 }
+
+// fn set_response_common_headers(response: , content_type: String) -> Response<Body> {
+//     let response = response
+//         .header(hyper::header::ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:5173")
+//         .header(hyper::header::CONTENT_TYPE, "text/json");
+
+//     response
+// }
