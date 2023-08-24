@@ -1,74 +1,67 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { styled, Button, SvgIcon } from "@mui/joy"
 import { List, ListItem, ListItemText} from "@mui/material"
 
-interface Props {
-    devices: Array<object>,
-    files: Array<object>
-}
+import * as http from "../services/http-requests"
 
-const FileList = (props: Props) => {
-    const [devices, setDevices] = useState(props.devices)
-    const [files, setFiles] = useState(props.files)
+// interface File {
+//     id: number,
+//     name: string,
+//     type: string,
+//     size: number,
+//     content?: string
+// }
 
-    const VisuallyHiddenInput = styled('input')`
-        clip: rect(0 0 0 0);
-        clip-path: inset(50%);
-        height: 1px;
-        overflow: hidden;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        white-space: nowrap;
-        width: 1px;
-    `
+const FileList = () => {
+    const [files, setFiles] = useState([])
+
+    const handleChange = (event) => {
+        const inputFiles = event.target.files
+
+        const newArray = Array.from(inputFiles).map(file => file)
+
+        setFiles(prevFiles => [...prevFiles , ...newArray])
+    }
+
+    // const removeFile = (index: number) => {
+    //     const fileList: Array<File> = files
+    //     const newList = fileList.filter(file => file.id !== index)
+    //     setFiles(...newList)
+    // }
+
+    const sendFiles = () => {
+        const filesFormData = new FormData()
+
+        files.map((file, index) => {
+            filesFormData.append(`file_${ index }`, file)
+        })
+
+        console.log("FILES", files)
+        console.log(filesFormData)
+
+        http.request("http://127.0.0.1:7878/send-file", "POST", {
+            body: filesFormData
+        })
+        .then(response => console.log("File send successfully:", response))
+        .catch(error => console.log(error))
+    }
 
     return (
         <>
-        { devices.length > 0 && (
-            <div className="section-container">
-                { files.length > 0 ? (
+        <div className="section-container">
+            <div className="notification-container no-files">
+                <h3>No files to transfer</h3>
+                <input type="file" name="filepicker" multiple onChange={ handleChange } />
+                <div>
+                    <button onClick={ sendFiles }>Send</button>
+                </div>
+                { files.length > 0 && (
                     <div className="list-container">
                         <CustomList array={ files } />
                     </div>
-                )
-                :
-                (
-                    <div className="notification-container no-files">
-                        <h2>No files to transfer</h2>
-                        <p>
-                            <small>
-                                <span></span>
-                                <Button 
-                                    component="label"
-                                    color="neutral"
-                                    startDecorator={
-                                        <SvgIcon>
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                strokeWidth={1.5}
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
-                                                />
-                                            </svg>
-                                        </SvgIcon>
-                                    }
-                                >
-                                    Upload file
-                                    <VisuallyHiddenInput type="file" />
-                                </Button>
-                            </small>
-                        </p>
-                    </div>
                 ) }
             </div>
-        ) }
+        </div>
         </>
     )
 }
@@ -79,9 +72,21 @@ interface ListProps {
 
 const CustomList = (props: ListProps) => {
 
+    const formatBytes = (bytes: number, decimals = 2): string => {
+        if (bytes === 0) return '0 Bytes'
+
+        const k = 1024
+        const dm = decimals < 0 ? 0 : decimals
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+    }
+
     const itemList = props.array.map((item, index) => (
         <ListItem disablePadding key={ index }>
-            <ListItemText primary={ item.name } />
+            <ListItemText primary={ `${ item.name } ${ item.type } ${ formatBytes(item.size) }` } />
         </ListItem>
     ))
 

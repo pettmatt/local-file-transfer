@@ -1,23 +1,47 @@
 use std::fs;
+use std::str::FromStr;
+use std::net::{Ipv4Addr, SocketAddrV4};
 use serde_json::Value;
 mod process_file;
 use process_file::handle_sending_file;
+mod custom_ip_utils;
+use custom_ip_utils::{get_ip, calculate_broadcast_address, fetch_device_ips_from_broadcast};
 use hyper::{Body, Request, Response};
 use hyper::header::HeaderValue;
 
 pub use super::custom_file::FileObject;
 
 pub async fn handle_request(request: Request<Body>) -> Result<Response<Body>, hyper::Error> {
-    println!("REQUEST");
+    println!("Request");
     match (request.method(), request.uri().path()) {
         (&hyper::Method::GET, "/") => send_file_to_client("index.html"),
         (&hyper::Method::GET, "/ping") => send_json_object("{\"message\": \"pong\"}"),
+        (&hyper::Method::GET, "/devices") => {
+            let devices = get_local_devices();
+            println!("devices {:?}", devices);
+            send_json_object("{\"devices\": [] }")
+        },
         (&hyper::Method::POST, "/send-file") => {
             let file_body = get_request_body(request).await;
             handle_sending_file(file_body)
         },
         _ => send_file_to_client("404.html")
     }
+}
+
+fn get_local_devices() -> Option<Vec<SocketAddrV4>> {
+    let ip_address: Ipv4Addr = get_ip().unwrap();
+    let subnet_mask: Ipv4Addr = Ipv4Addr::from_str("255.255.255.255").unwrap();
+
+    let broadcast_address: Option<Ipv4Addr> = calculate_broadcast_address(ip_address, subnet_mask);
+    println!("NETWORK {:?}", ip_address);
+
+    let devices: Option<Vec<SocketAddrV4>> = match broadcast_address {
+        Some(address) => fetch_device_ips_from_broadcast(address),
+        _ => None
+    };
+
+    devices
 }
 
 async fn get_request_body(request: Request<Body>) -> Value {

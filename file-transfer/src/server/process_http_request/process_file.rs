@@ -8,11 +8,14 @@ use std::io;
 use super::FileObject;
 use hyper::{Body, Request, Response, Server};
 
-
 // Handling communication between host and other devices.
 // Currently limited to sending text files.
 pub fn handle_sending_file(file_details: Value) -> Result<Response<Body>, hyper::Error> {
     // let path = file_json["path"].as_str().expect("Path not found");
+    println!("============");
+    println!("Details {:?}", file_details);
+    println!("Body {:?}", file_details["body"].as_str().expect("No body"));
+    println!("============");
     let name = file_details["name"].as_str().expect("Name not found");
     let file_name = format!("{name}");
     println!("read file named {}", file_name);

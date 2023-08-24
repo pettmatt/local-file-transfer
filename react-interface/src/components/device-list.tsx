@@ -16,10 +16,10 @@ const DeviceList = (props: Props) => {
             :
             (
                 <div className="notification-container no-devices">
-                    <h2>No devices found</h2>
+                    <h3>No devices found</h3>
                     <p>
                         <small>
-                            Please make sure you're connected to the local network through WiFi or Ethernet cable.
+                            Make sure you're connected to the local network through WiFi or Ethernet cable.
                         </small>
                     </p>
                 </div>

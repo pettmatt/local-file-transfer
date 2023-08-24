@@ -1,4 +1,4 @@
-import { ReactNode } from "react"
+import { useEffect, useState } from "react"
 import FileList from "./components/file-list"
 import DeviceList from "./components/device-list"
 import FileReceiver from "./components/file-receiver"
@@ -8,46 +8,46 @@ import AutoExtendableContainer from "./components/custom-components/auto-extenda
 import * as http from "./services/http-requests"
 
 const App = () => {
-  const devices = [
-    {
-      name: "test 01"
-    },
-    {
-      name: "test 02"
-    }
-  ]
+  const [devices, setDevices] = useState([])
+  const [filesReceived, setFileReceived] = useState([])
 
-  const filesReceived = []
+  // const devices = [
+  //   {
+  //     name: "test 01"
+  //   },
+  //   {
+  //     name: "test 02"
+  //   }
+  // ]
 
-  const fileReceiverHeader: ReactNode = (
-    <h2>Files received</h2>
-  )
+  useEffect(() => {
+    http.request("http://127.0.0.1:7878/ping")
+      .then(() => {
+        console.log("Local backend is on")
+        http.request("http://127.0.0.1:7878/devices")
+          .then(response => setDevices(response))
+          .catch(error => console.warn("Devices fetch error:", error))
+      })
+      .catch(error => console.warn("Seems like local backend is not on:", error))
 
-  const deviceListsHeader: ReactNode = (
-    <h2>Devices</h2>
-  )
+    console.log("Devices:", devices)
+  }, [])
 
-  const fileListsHeader: ReactNode = (
-    <h2>Files</h2>
-  )
-
-  const requestResponse = http.request("http://127.0.0.1:7878/ping")
-  console.log("HTTP test", requestResponse)
 
   return (
     <>
       <h1>Transfer file application</h1>
 
-      <AutoExtendableContainer header={ fileReceiverHeader } manualSwitch={ false }>
+      <AutoExtendableContainer header={ <h2>Files received</h2> } manualSwitch={ false }>
         <FileReceiver fileReceived={ filesReceived } />
       </AutoExtendableContainer>
 
-      <ExtendableContainer header={ deviceListsHeader }>
+      <ExtendableContainer header={ <h2>Devices</h2> }>
         <DeviceList devices={ devices } />
       </ExtendableContainer>
 
-      <ExtendableContainer header={ fileListsHeader }>
-        <FileList devices={ devices } files={ [] } />
+      <ExtendableContainer header={ <h2>Files</h2> }>
+        <FileList devices={ devices } />
       </ExtendableContainer>
     </>
   )
