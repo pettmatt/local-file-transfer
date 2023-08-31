@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
-import { styled, Button, SvgIcon } from "@mui/joy"
+import { useState } from "react"
+// import { styled, Button, SvgIcon } from "@mui/joy"
 import { List, ListItem, ListItemText} from "@mui/material"
 
 import * as http from "../services/http-requests"
@@ -18,32 +18,48 @@ const FileList = () => {
     const handleChange = (event) => {
         const inputFiles = event.target.files
 
-        const newArray = Array.from(inputFiles).map(file => file)
+        const newArray = Array.from(inputFiles).filter(newFile =>
+            !files.some(existingFiles => existingFiles.name === newFile.name)
+        )
+
+        event.target.value = null
 
         setFiles(prevFiles => [...prevFiles , ...newArray])
     }
 
-    // const removeFile = (index: number) => {
-    //     const fileList: Array<File> = files
-    //     const newList = fileList.filter(file => file.id !== index)
-    //     setFiles(...newList)
-    // }
-
     const sendFiles = () => {
-        const filesFormData = new FormData()
-
         files.map((file, index) => {
-            filesFormData.append(`file_${ index }`, file)
-        })
+            const fileReader = new FileReader()
+            fileReader.readAsArrayBuffer(file)
 
+            fileReader.onload = (event) => {
+                const content = event.target.result
+                const chunkSize = 1000
+              
+                const totalChunks = event.target.result.byteLength / chunkSize
+                const fileName = Math.random().toString(36).slice(-6) + file.name
+
+                for (let i = 0; i < totalChunks + 1; i++) {
+                    const chunk = content.slice(i * chunkSize, (i + 1) * chunkSize)
+
+                    // if (chunk.size === 0) return
+                    console.log("CHUNK", chunk.length)
+    
+                    http.request(`http://127.0.0.1:7878/send-file?name=${ fileName }`, "POST", {
+                        headers: {
+                            "content-type": "application/octet-stream",
+                            "content-length": chunk.length
+                        },
+                        body: chunk
+                    })
+                    .then(response => console.log("File send successfully:", response))
+                    .catch(error => console.log(error))
+
+                    return
+                }
+            }
+        })
         console.log("FILES", files)
-        console.log(filesFormData)
-
-        http.request("http://127.0.0.1:7878/send-file", "POST", {
-            body: filesFormData
-        })
-        .then(response => console.log("File send successfully:", response))
-        .catch(error => console.log(error))
     }
 
     return (
@@ -57,7 +73,7 @@ const FileList = () => {
                 </div>
                 { files.length > 0 && (
                     <div className="list-container">
-                        <CustomList array={ files } />
+                        <CustomList fileList={ files } setFiles={ setFiles } />
                     </div>
                 ) }
             </div>
@@ -67,7 +83,8 @@ const FileList = () => {
 }
 
 interface ListProps {
-    array: Array<object>
+    fileList: Array<object>,
+    setFiles: Function
 }
 
 const CustomList = (props: ListProps) => {
@@ -81,11 +98,17 @@ const CustomList = (props: ListProps) => {
 
         const i = Math.floor(Math.log(bytes) / Math.log(k))
 
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
     }
 
-    const itemList = props.array.map((item, index) => (
+    const removeFile = (fileName: string) => {
+        const newList = props.fileList.filter(file => file.name !== fileName)
+        props.setFiles(newList)
+    }
+
+    const itemList = props.fileList.map((item, index) => (
         <ListItem disablePadding key={ index }>
+            <button onClick={ () => removeFile(item.name) }>Remove</button>
             <ListItemText primary={ `${ item.name } ${ item.type } ${ formatBytes(item.size) }` } />
         </ListItem>
     ))

@@ -16,11 +16,9 @@ export const request = (address: string = "http://127.0.0.1:7878", method: strin
 
     const response = fetch(request)
         .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP request response was not OK: ${ response }`)
-            }
+            if (response.ok) return response.json()
 
-            return response.json()
+            throw new Error(`HTTP request response was not OK: ${ response }`)
         })
         .catch(error => {
             // console.warn("Error occured while making HTTP request:", error)

@@ -1,4 +1,5 @@
 use std::fs;
+use std::sync::Arc;
 use std::str::FromStr;
 use std::net::{Ipv4Addr, SocketAddrV4};
 use serde_json::Value;
@@ -7,23 +8,25 @@ use process_file::handle_sending_file;
 mod custom_ip_utils;
 use custom_ip_utils::{get_ip, calculate_broadcast_address, fetch_device_ips_from_broadcast};
 use hyper::{Body, Request, Response};
-use hyper::header::HeaderValue;
+use hyper::header::{HeaderValue, CONTENT_TYPE, CONTENT_DISPOSITION};
+use tokio::fs::File;
+use std::path::Path;
 
 pub use super::custom_file::FileObject;
 
 pub async fn handle_request(request: Request<Body>) -> Result<Response<Body>, hyper::Error> {
-    println!("Request");
     match (request.method(), request.uri().path()) {
         (&hyper::Method::GET, "/") => send_file_to_client("index.html"),
         (&hyper::Method::GET, "/ping") => send_json_object("{\"message\": \"pong\"}"),
         (&hyper::Method::GET, "/devices") => {
-            let devices = get_local_devices();
-            println!("devices {:?}", devices);
-            send_json_object("{\"devices\": [] }")
+            let devices = get_local_devices().unwrap();
+            send_json_object(&format!("{{\"devices\": {:?} }}", devices))
         },
         (&hyper::Method::POST, "/send-file") => {
+            println!("Send file request {:#?}", request);
             let file_body = get_request_body(request).await;
-            handle_sending_file(file_body)
+            let (status, message) = handle_sending_file(file_body);
+            send_json_object(&format!("{{\"message\": \"{message}\"}}"))
         },
         _ => send_file_to_client("404.html")
     }
@@ -56,6 +59,29 @@ async fn get_request_body(request: Request<Body>) -> Value {
     body_json
 }
 
+// async fn process_file_post_test(request: Request<Body>) -> Value {
+//     let content_type = request.headers().get(CONTENT_TYPE).cloned().unwrap_or_default();
+//     let mut boundary = Vec::from("--");
+//     boundary.extend(content_type.as_bytes());
+
+//     let files = Arc::new(fs::create_dir_all("uploads").await.unwrap());
+//     let mut form = hyper_multipart::Multipart::new(request.into_body(), boundary.into());
+    
+//     while let Some(mut field) = form.next_field().await.unwrap() {
+//         let filename = field.headers().get(CONTENT_DISPOSITION).unwrap();
+//         let mut filepath = Path::new("uploads").to_path_buf();
+//         filepath.push(&sanitize_filename::sanitize(filename.to_str().unwrap()));
+//         let mut file = File::create(filepath).await.unwrap();
+
+//         while let Some(chunk) = field.next().await {
+//             let bytes = chunk.unwrap().into_bytes();
+//             file.write_all(&bytes).await.unwrap();
+//         }
+//     }
+
+//     body_json
+// }
+
 fn send_json_object(json_string: &str) -> Result<Response<Body>, hyper::Error> {
     let response = Response::builder()
         .header(
@@ -66,7 +92,7 @@ fn send_json_object(json_string: &str) -> Result<Response<Body>, hyper::Error> {
             hyper::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
             HeaderValue::from_static("true")
         )
-        .header("Content-Type", "text/json")
+        .header("content-type", "text/json")
         .header("content-length", json_string.len())
         .body(Body::from(json_string.to_string()))
         .unwrap();
@@ -96,7 +122,7 @@ fn send_file_to_client(file_path: &str) -> Result<Response<Body>, hyper::Error> 
             hyper::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
             HeaderValue::from_static("true")
         )
-        .header("Content-Type", "text/json")
+        .header("content-type", "text/json")
         .header("content-length", contents.len())
         .body(Body::from(contents))
         .unwrap();

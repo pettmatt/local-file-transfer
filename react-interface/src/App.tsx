@@ -11,28 +11,37 @@ const App = () => {
   const [devices, setDevices] = useState([])
   const [filesReceived, setFileReceived] = useState([])
 
-  // const devices = [
-  //   {
-  //     name: "test 01"
-  //   },
-  //   {
-  //     name: "test 02"
-  //   }
-  // ]
-
   useEffect(() => {
-    http.request("http://127.0.0.1:7878/ping")
-      .then(() => {
-        console.log("Local backend is on")
-        http.request("http://127.0.0.1:7878/devices")
-          .then(response => setDevices(response))
-          .catch(error => console.warn("Devices fetch error:", error))
-      })
-      .catch(error => console.warn("Seems like local backend is not on:", error))
-
-    console.log("Devices:", devices)
+    fetchDevices()
   }, [])
 
+  const fetchDevices = () => {
+    // The IP should be dynamic
+    http.request("http://127.0.0.1:7878/devices")
+      .then(response => {
+        const responseDevices: Array<object> = response.devices
+
+        if (devices.length === responseDevices.length) {
+
+          const newList = new Array(responseDevices.length)
+          newList.push(responseDevices)
+
+          Array.from(responseDevices).filter(device => {
+            Array.from(devices).map(oldDevice => {
+
+              if (device.name !== oldDevice.name) 
+                newList.push(device)
+
+            })
+          })
+
+          setDevices(...newList)
+        }
+
+        else setDevices(responseDevices)
+      })
+      .catch(error => console.warn("Device fetch error:", error))
+  }
 
   return (
     <>
@@ -42,7 +51,12 @@ const App = () => {
         <FileReceiver fileReceived={ filesReceived } />
       </AutoExtendableContainer>
 
-      <ExtendableContainer header={ <h2>Devices</h2> }>
+      <ExtendableContainer header={
+        <>
+          <h2>Devices</h2>
+          <button onClick={ fetchDevices }>Update</button>
+        </>
+      }>
         <DeviceList devices={ devices } />
       </ExtendableContainer>
 

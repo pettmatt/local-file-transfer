@@ -6,16 +6,15 @@ use std::io;
 
 // Which ever file is using process_file needs to make sure that they also import FileObject
 use super::FileObject;
-use hyper::{Body, Request, Response, Server};
 
 // Handling communication between host and other devices.
 // Currently limited to sending text files.
-pub fn handle_sending_file(file_details: Value) -> Result<Response<Body>, hyper::Error> {
+pub fn handle_sending_file(file_details: Value) -> (i32, &'static str) {
     // let path = file_json["path"].as_str().expect("Path not found");
-    println!("============");
+    println!("\n=====================");
     println!("Details {:?}", file_details);
-    println!("Body {:?}", file_details["body"].as_str().expect("No body"));
-    println!("============");
+    println!("File {:#?}", file_details["body"]["file"]);
+    println!("=====================\n");
     let name = file_details["name"].as_str().expect("Name not found");
     let file_name = format!("{name}");
     println!("read file named {}", file_name);
@@ -39,12 +38,7 @@ pub fn handle_sending_file(file_details: Value) -> Result<Response<Body>, hyper:
         }
     }
 
-    let response = Response::builder()
-        .header(hyper::header::CONTENT_TYPE, "text/json")
-        .body(Body::from(message))
-        .unwrap();
-
-    Ok(response)
+    (status, message)
 }
 
 fn read_file_utf16(filename: &str) -> Result<String, io::Error> {
