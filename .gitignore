@@ -1,13 +1,8 @@
 /target
 /dist
 .vscode
-.env
 
-*.pdf
-*.mp4
-*.txt
-*.png
-*.jpg
+react-interface/target
+react-interface/dist
 
-web-interface/target
-web-interface/dist
+file-transfer/node

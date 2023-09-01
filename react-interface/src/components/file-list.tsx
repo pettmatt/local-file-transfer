@@ -37,7 +37,7 @@ const FileList = () => {
                 const chunkSize = 1000
               
                 const totalChunks = event.target.result.byteLength / chunkSize
-                const fileName = Math.random().toString(36).slice(-6) + file.name
+                const id = Math.random().toString(36).slice(-10)
 
                 for (let i = 0; i < totalChunks + 1; i++) {
                     const chunk = content.slice(i * chunkSize, (i + 1) * chunkSize)
@@ -45,16 +45,20 @@ const FileList = () => {
                     // if (chunk.size === 0) return
                     console.log("CHUNK", chunk.length)
     
-                    http.request(`http://127.0.0.1:7878/send-file?name=${ fileName }`, "POST", {
+                    http.request(`http://127.0.0.1:7878/send-file?file_id=${ id }`, "POST", {
                         headers: {
                             "content-type": "application/octet-stream",
                             "content-length": chunk.length
                         },
-                        body: chunk
+                        body: {
+                            chunk: chunk,
+                            name: file.name
+                        }
                     })
                     .then(response => console.log("File send successfully:", response))
                     .catch(error => console.log(error))
 
+                    // remove 'return' later
                     return
                 }
             }
