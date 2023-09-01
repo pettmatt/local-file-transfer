@@ -1,0 +1,11 @@
+.env
+*.png
+*.jpg
+*.pdf
+*.txt
+*.mp4
+
+todo_later.md
+
+/target
+/file_tests
