@@ -2,6 +2,7 @@ use actix_web::{get, Error, HttpResponse, HttpRequest, Responder, http::header::
 use actix_multipart::Multipart;
 use futures_util::StreamExt;
 use tokio::io::AsyncWriteExt;
+use mime::Mime;
 
 // use request_processes::get_local_devices;
 // use process_file::handle_sending_file;
@@ -49,10 +50,12 @@ pub async fn get_devices() -> impl Responder {
 pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> Result<HttpResponse, Error> {
 
     // 1) Receive file.
-    // 2) Save the file locally.
-    //  2.1) Check if local directory exists.
-    //  2.2) Create the directory if needed.
-    //  2.3) Create file.
+    // 2) Check if request was "legal".
+    // 3) Save the file locally.
+    //  3.1) Check if local directory exists.
+    //  3.2) Create the directory if needed.
+    //  3.3) Create a file.
+    //  3.4) Push chunks into the file.
 
     let content_length: usize = match request.headers().get(CONTENT_LENGTH) {
         Some(header_value) => header_value.to_str().unwrap_or("0").parse().unwrap(),
@@ -65,6 +68,9 @@ pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> Resul
     while let Some(item) = payload.next().await {
         file_count = file_count + 1;
         let mut field = item?;
+
+        let filetype: Option<&Mime> = field.content_type();
+        if filetype.is_none() { continue; }
 
         let filename = field.content_disposition()
             .get_filename()
@@ -99,7 +105,7 @@ pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> Resul
         files_created.push(saved_file);
     }
 
-    let message = format!("loaded {} out of {} files", files_created.len(), file_count);
+    let message = format!("loaded {} out of {} file(s)", files_created.len(), file_count);
     let response = json!({
         "status": "success",
         "message": message
