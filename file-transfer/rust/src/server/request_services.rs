@@ -1,13 +1,12 @@
-use std::net::{SocketAddrV4, IpAddr, Ipv4Addr, SocketAddr, TcpStream};
-use std::path::Path;
-use actix_web::{get, post, web, error, HttpRequest, HttpResponse, Responder, http::header::CONTENT_LENGTH};
+use actix_web::{get, Error, HttpResponse, HttpRequest, Responder, http::header::CONTENT_LENGTH};
 use actix_multipart::Multipart;
-use serde_json::Value;
+use futures_util::StreamExt;
+use tokio::io::AsyncWriteExt;
 
-use request_processes::get_local_devices;
+// use request_processes::get_local_devices;
 // use process_file::handle_sending_file;
 
-mod process_file;
+// mod process_file;
 mod request_processes;
 pub mod custom_ip_utils;
 
@@ -17,10 +16,8 @@ pub async fn frontpage() -> impl Responder {
 }
 
 #[get("/ping")]
-pub async fn ping(req_body: String) -> impl Responder {
-    let devices = get_local_devices().unwrap();
-
-    let response: Value = json!({
+pub async fn ping(_ping_address: String) -> impl Responder {
+    let response = json!({
         "message": "Pong"
     });
 
@@ -31,63 +28,86 @@ pub async fn ping(req_body: String) -> impl Responder {
 
 #[get("/devices")]
 pub async fn get_devices() -> impl Responder {
-    let devices = get_local_devices().unwrap();
 
-    let response: Value = json!({
-        "devices": devices
-    });
+    // 1) Check devices in the network by pinging to address of the server.
+    //  1.1) If device responds the device has the same application.
+    // 2) Return the retrieved device details.
+
+    // let devices = get_local_devices().unwrap();
+
+    // let response = json!({
+    //     "devices": devices
+    // });
+
+    let response = String::from("Hard coded value");
 
     HttpResponse::Ok()
         .content_type("application/json")
         .body(response)
 }
 
-pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> impl Responder {
+pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> Result<HttpResponse, Error> {
 
     // 1) Receive file.
-    // 2) Save the file locally in a folder.
+    // 2) Save the file locally.
+    //  2.1) Check if local directory exists.
+    //  2.2) Create the directory if needed.
+    //  2.3) Create file.
 
     let content_length: usize = match request.headers().get(CONTENT_LENGTH) {
         Some(header_value) => header_value.to_str().unwrap_or("0").parse().unwrap(),
         None => 0
     };
 
-    let file_count: usize = 0;
-    let mut current_count: usize = 0;
-    let directory: &str = "./upload/";
+    let mut files_created = Vec::new();
+    let mut file_count = 0;
 
-    // loop {
-    //     if current_count == file_count {
-    //         break;
-    //     }
+    while let Some(item) = payload.next().await {
+        file_count = file_count + 1;
+        let mut field = item?;
 
-    //     if let Ok(Some(mut field)) = payload.try_next().await {
-    //         let filetype: Option<&Mime> = field.content_type();
-    //         if filetype.is_none() { 
-    //             continue; 
-    //         }
+        let filename = field.content_disposition()
+            .get_filename()
+            .unwrap_or("unknown");
 
-    //         let destination: String = format!(
-    //             "{}{}-{}",
-    //             directory,
-    //             field.content_disposition().get_filename().unwrap()
-    //         );
+        let read_result = tokio::fs::read_dir("./uploads")
+            .await
+            .map_err(|error| { error });
 
-    //         let mut saved_file: fs::File = fs::File::create(&destination).unwrap();
-    //         while let Ok(Some(chunk)) = field.try_next().await {
-    //             let _ = saved_file.write_all(&chunk).await.unwrap();
-    //         }
-    //     } else {
-    //         break;
-    //     }
+        match read_result {
+            Err(err) => {
+                // Directory was not found, which is identified as code "3"
+                if err.raw_os_error() == Some(3) {
+                    let _ = tokio::fs::create_dir("./uploads")
+                        .await
+                        .map_err(|error| {
+                            eprintln!("Error creating directory: {:?}", error);
+                        });
+                }
+            },
+            _ => println!("Application has existing 'uploads' directory")
+        }
 
-    //     current_count += 1;
-    // }
+        let filepath = format!("./uploads/{filename}");
 
-    // let (status, message) = handle_sending_file(&body);
-    // let response_json = web::Json({ message: "Still static", body: body });
+        let mut saved_file = tokio::fs::File::create(filepath).await.unwrap();
+        while let Some(chunk) = field.next().await {
+            let chunk = chunk.unwrap();
+            let _ = saved_file.write_all(&chunk).await.unwrap();
+        }
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body("This is in testing phase")
+        files_created.push(saved_file);
+    }
+
+    let message = format!("loaded {} out of {} files", files_created.len(), file_count);
+    let response = json!({
+        "status": "success",
+        "message": message
+    });
+
+    Ok(
+        HttpResponse::Ok()
+            .content_type("application/json")
+            .json(response)
+    )
 }

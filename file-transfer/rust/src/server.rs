@@ -3,7 +3,7 @@ use dotenv::dotenv;
 use actix_web::{web, App, HttpServer};
 
 use request_services::{frontpage, ping, get_devices, receive_file};
-use process_http_request::handle_request;
+// use process_http_request::handle_request;
 pub mod custom_file;
 
 mod custom_thread;
@@ -22,9 +22,9 @@ pub async fn setup_server() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         App::new()
-            // .service(ping)
+            .service(ping)
             .service(frontpage)
-            // .service(get_devices)
+            .service(get_devices)
             .route("/send-file", web::post().to(receive_file))
     })
     .workers(4)

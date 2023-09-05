@@ -5,5 +5,5 @@ mod server;
 extern crate serde_json;
 
 fn main() {
-    setup_server();
+    let _ = setup_server();
 }

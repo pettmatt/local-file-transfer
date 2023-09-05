@@ -4,8 +4,10 @@ interface RequestInit {
 }
 
 export const request = (address: string = "http://127.0.0.1:7878", method: string = "GET", body: object = {}) => {
+    method = method.toUpperCase()
+
     const init: RequestInit = {
-        method: method,
+        method: method
     }
 
     if (method === "POST" || method === "PUT" || method === "DELETE") {

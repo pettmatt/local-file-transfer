@@ -28,41 +28,34 @@ const FileList = () => {
     }
 
     const sendFiles = () => {
+        const formData = new FormData()
+
         files.map((file, index) => {
-            const fileReader = new FileReader()
-            fileReader.readAsArrayBuffer(file)
+            formData.append(`${ file.type }-${ index }`, file)
 
-            fileReader.onload = (event) => {
-                const content = event.target.result
-                const chunkSize = 1000
-              
-                const totalChunks = event.target.result.byteLength / chunkSize
-                const id = Math.random().toString(36).slice(-10)
+            // const fileReader = new FileReader()
+            // fileReader.readAsArrayBuffer(file)
 
-                for (let i = 0; i < totalChunks + 1; i++) {
-                    const chunk = content.slice(i * chunkSize, (i + 1) * chunkSize)
+            // fileReader.onload = (event) => {
+            //     const content = event.target.result
+            // }
+        })
 
-                    // if (chunk.size === 0) return
-                    console.log("CHUNK", chunk.length)
-    
-                    http.request(`http://127.0.0.1:7878/send-file?file_id=${ id }`, "POST", {
-                        headers: {
-                            "content-type": "application/octet-stream",
-                            "content-length": chunk.length
-                        },
-                        body: {
-                            chunk: chunk,
-                            name: file.name
-                        }
-                    })
-                    .then(response => console.log("File send successfully:", response))
-                    .catch(error => console.log(error))
-
-                    // remove 'return' later
-                    return
-                }
+        http.request(`http://127.0.0.1:7878/send-file`, "POST", {
+            headers: {
+                "content-type": "multipart/form-data",
+                "access-control-allow-methods": "GET, POST, DELETE",
+                "access-control-allow-origin": "http://127.0.0.1:7878",
+                // "access-control-allow-origin": "*",
+                "user-agent": "FiletransferClient/0.5"
+            },
+            body: {
+                data: formData,
             }
         })
+        .then(response => console.log("Files send successfully:", response))
+        .catch(error => console.log(error))
+
         console.log("FILES", files)
     }
 
