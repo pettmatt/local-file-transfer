@@ -8,7 +8,6 @@ pub mod custom_file;
 
 mod custom_thread;
 mod request_services;
-mod process_http_request;
 
 #[actix_web::main]
 pub async fn setup_server() -> std::io::Result<()> {
