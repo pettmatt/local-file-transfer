@@ -1,8 +1,9 @@
-use actix_web::{get, Error, HttpResponse, HttpRequest, Responder, http::header::CONTENT_LENGTH};
+use actix_web::{web, get, delete, Error, HttpResponse, HttpRequest, Responder};
 use actix_multipart::Multipart;
 use futures_util::StreamExt;
 use tokio::io::AsyncWriteExt;
 use mime::Mime;
+use tokio::fs;
 
 // use request_processes::get_local_devices;
 // use process_file::handle_sending_file;
@@ -47,7 +48,97 @@ pub async fn get_devices() -> impl Responder {
         .body(response)
 }
 
-pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> Result<HttpResponse, Error> {
+#[get("/local-files")]
+pub async fn get_local_files() -> Result<HttpResponse, Error> {
+
+    let mut files: Vec<String> = Vec::new();
+
+    let entries = std::fs::read_dir("./uploads")?;
+
+    for entry in entries {
+        let entry = entry?;
+        let file_name = entry.file_name(); // returns OsString
+        let file_name_string = file_name.to_string_lossy();
+        files.push(file_name_string.to_string());
+    }
+
+    let response = json!({
+        "files": files
+    });
+
+    Ok(
+        HttpResponse::Ok()
+            .content_type("application/json")
+            .json(response)
+    )
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct QueryParams {
+    file_name: String,
+}
+
+#[delete("/local-file")]
+pub async fn remove_local_file(query_params: web::Query<QueryParams>) -> Result<HttpResponse, Error> {
+
+    // 1) Get name of the file from request body/params.
+    // 2) Get file with the same name and delete it.
+
+    let mut found_file = String::new();
+    let delete_file = &query_params.file_name.to_string();
+
+    let entries = std::fs::read_dir("./uploads")?;
+
+    for entry in entries {
+        let entry = entry?;
+        let file_name = entry.file_name();
+        let file_name_string = file_name.to_string_lossy().to_string();
+
+        found_file = if &file_name_string == delete_file {
+            "true".to_string()
+        } else {
+            continue;
+        };
+    }
+
+    let mut response = json!({
+        "message": format!("File '{}' deleted '{}'", delete_file, found_file)
+    });
+
+    if found_file == "true" {
+        let destination = format!("./uploads/{}", &delete_file);
+        let file_deletion = std::fs::remove_file(destination);
+
+        match file_deletion {
+            Ok(()) => {},
+            Err(error) => {
+                response = json!({
+                    "message": format!("Unable to delete file named '{:?}'.", delete_file),
+                    "reason": format!("Error occured while deleting: {error}")
+                });
+            }
+        }
+
+        return Ok(
+            HttpResponse::Ok()
+                .content_type("application/json")
+                .json(response)
+        );
+    }
+
+    response = json!({
+        "message": format!("Unable to delete file named '{:?}'.", delete_file),
+        "reason": "File not found."
+    });
+
+    Ok(
+        HttpResponse::Ok()
+            .content_type("application/json")
+            .json(response)
+    )
+}
+
+pub async fn upload_file(mut payload: Multipart, _request: HttpRequest) -> Result<HttpResponse, Error> {
 
     // 1) Receive file.
     // 2) Check if request was "legal".
@@ -56,11 +147,6 @@ pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> Resul
     //  3.2) Create the directory if needed.
     //  3.3) Create a file.
     //  3.4) Push chunks into the file.
-
-    let content_length: usize = match request.headers().get(CONTENT_LENGTH) {
-        Some(header_value) => header_value.to_str().unwrap_or("0").parse().unwrap(),
-        None => 0
-    };
 
     let mut files_created = Vec::new();
     let mut file_count = 0;
@@ -76,7 +162,7 @@ pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> Resul
             .get_filename()
             .unwrap_or("unknown");
 
-        let read_result = tokio::fs::read_dir("./uploads")
+        let read_result = fs::read_dir("./uploads")
             .await
             .map_err(|error| { error });
 
@@ -84,7 +170,7 @@ pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> Resul
             Err(err) => {
                 // Directory was not found, which is identified as code "3"
                 if err.raw_os_error() == Some(3) {
-                    let _ = tokio::fs::create_dir("./uploads")
+                    let _ = fs::create_dir("./uploads")
                         .await
                         .map_err(|error| {
                             eprintln!("Error creating directory: {:?}", error);
@@ -96,7 +182,7 @@ pub async fn receive_file(mut payload: Multipart, request: HttpRequest) -> Resul
 
         let filepath = format!("./uploads/{filename}");
 
-        let mut saved_file = tokio::fs::File::create(filepath).await.unwrap();
+        let mut saved_file = fs::File::create(filepath).await.unwrap();
         while let Some(chunk) = field.next().await {
             let chunk = chunk.unwrap();
             let _ = saved_file.write_all(&chunk).await.unwrap();
