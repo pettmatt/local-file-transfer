@@ -2,7 +2,7 @@ use std::env;
 use dotenv::dotenv;
 use actix_web::{web, App, HttpServer};
 
-use request_services::{frontpage, ping, get_devices, upload_file, get_local_files, remove_local_file};
+use request_services::{frontpage, ping, get_devices, upload_file, download_file, get_local_files, remove_local_file};
 // use process_http_request::handle_request;
 pub mod custom_file;
 
@@ -26,6 +26,7 @@ pub async fn setup_server() -> std::io::Result<()> {
             .service(get_devices)
             .service(get_local_files)
             .service(remove_local_file)
+            .service(download_file)
             .route("/send-file", web::post().to(upload_file))
     })
     .workers(4)
