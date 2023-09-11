@@ -1,6 +1,7 @@
 use std::env;
 use dotenv::dotenv;
-use actix_web::{web, App, HttpServer};
+use actix_web::{web, http::header, App, HttpServer};
+use actix_cors::Cors;
 
 use request_services::{frontpage, ping, get_devices, upload_file, download_file, get_local_files, remove_local_file};
 // use process_http_request::handle_request;
@@ -20,7 +21,16 @@ pub async fn setup_server() -> std::io::Result<()> {
     println!("Server is running on http://{host_address}:{port}");
 
     HttpServer::new(|| {
+        let cors = Cors::default()
+            .allowed_origin("http://127.0.0.1:5173")
+            .allowed_methods(vec!["GET", "POST", "DELETE"])
+            // .allowed_headers(vec![header::CONTENT_LENGTH, header::ACCEPT])
+            // .allowed_header(header::CONTENT_TYPE)
+            // .allowed_header(header::CONTENT_DISPOSITION)
+            .supports_credentials();
+
         App::new()
+            .wrap(cors)
             .service(ping)
             .service(frontpage)
             .service(get_devices)

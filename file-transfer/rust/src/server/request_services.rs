@@ -7,10 +7,8 @@ use mime::Mime;
 use tokio::fs;
 use std::path::PathBuf;
 
-// use request_processes::get_local_devices;
-// use process_file::handle_sending_file;
+use request_processes::get_local_devices;
 
-// mod process_file;
 mod request_processes;
 pub mod custom_ip_utils;
 
@@ -37,17 +35,15 @@ pub async fn get_devices() -> impl Responder {
     //  1.1) If device responds the device has the same application.
     // 2) Return the retrieved device details.
 
-    // let devices = get_local_devices().unwrap();
+    let devices = get_local_devices().unwrap();
 
-    // let response = json!({
-    //     "devices": devices
-    // });
-
-    let response = String::from("Hard coded value");
+    let response = json!({
+        "devices": devices
+    });
 
     HttpResponse::Ok()
         .content_type("application/json")
-        .body(response)
+        .json(response)
 }
 
 #[get("/local-files")]
@@ -173,7 +169,9 @@ pub async fn upload_file(mut payload: Multipart, _request: HttpRequest) -> Resul
         let mut field = item?;
 
         let filetype: Option<&Mime> = field.content_type();
-        if filetype.is_none() { continue; }
+        if filetype.is_none() {
+            continue;
+        }
 
         let filename = field.content_disposition()
             .get_filename()
@@ -199,8 +197,10 @@ pub async fn upload_file(mut payload: Multipart, _request: HttpRequest) -> Resul
 
         let filepath = format!("./uploads/{filename}");
 
+        println!("FIELD {:?}", field);
         let mut saved_file = fs::File::create(filepath).await.unwrap();
         while let Some(chunk) = field.next().await {
+            // println!("chunk {:#?}", chunk);
             let chunk = chunk.unwrap();
             let _ = saved_file.write_all(&chunk).await.unwrap();
         }

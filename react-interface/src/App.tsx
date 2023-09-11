@@ -18,29 +18,29 @@ const App = () => {
   const fetchDevices = () => {
     // The IP should be dynamic
     http.request("http://127.0.0.1:7878/devices")
-      .then(response => {
-        const responseDevices: Array<object> = response.devices
+    .then(response => {
+      const responseDevices: Array<object> = response.devices
 
-        if (devices.length === responseDevices.length) {
+      if (devices.length === responseDevices.length) {
 
-          const newList = new Array(responseDevices.length)
-          newList.push(responseDevices)
+        const newList = new Array(responseDevices.length)
+        newList.push(responseDevices)
 
-          Array.from(responseDevices).filter(device => {
-            Array.from(devices).map(oldDevice => {
+        Array.from(responseDevices).filter(device => {
+          Array.from(devices).map(oldDevice => {
 
-              if (device.name !== oldDevice.name) 
-                newList.push(device)
+            if (device.name !== oldDevice.name)
+              newList.push(device)
 
-            })
           })
+        })
 
-          setDevices(...newList)
-        }
+        setDevices(...newList)
+      }
 
-        else setDevices(responseDevices)
-      })
-      .catch(error => console.warn("Device fetch error:", error))
+      else setDevices(responseDevices)
+    })
+    .catch(error => console.warn("Device fetch error:", error))
   }
 
   return (
