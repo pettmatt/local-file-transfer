@@ -197,10 +197,8 @@ pub async fn upload_file(mut payload: Multipart, _request: HttpRequest) -> Resul
 
         let filepath = format!("./uploads/{filename}");
 
-        println!("FIELD {:?}", field);
         let mut saved_file = fs::File::create(filepath).await.unwrap();
         while let Some(chunk) = field.next().await {
-            // println!("chunk {:#?}", chunk);
             let chunk = chunk.unwrap();
             let _ = saved_file.write_all(&chunk).await.unwrap();
         }

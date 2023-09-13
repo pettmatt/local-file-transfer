@@ -19,7 +19,7 @@ const DeviceList = (props: Props) => {
                     <h3>No devices found</h3>
                     <p>
                         <small>
-                            Make sure you're connected to the local network through WiFi or Ethernet cable.
+                            Make sure you're connected to the local network through Wi-Fi or Ethernet cable.
                         </small>
                     </p>
                 </div>

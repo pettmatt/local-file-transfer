@@ -1,9 +1,14 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { List, ListItem, ListItemText} from "@mui/material"
 // import { styled, Button, SvgIcon } from "@mui/joy"
 
 const FileList = () => {
     const [files, setFiles] = useState([])
+    const [localFiles, setLocalFiles] = useState([])
+
+    useEffect(() => {
+        getLocalFiles()
+    }, [])
 
     const handleChange = (event) => {
         const inputFiles = event.target.files
@@ -34,6 +39,7 @@ const FileList = () => {
         })
         .then(response => {
             if (response.ok) {
+                downloadFile(response.body, filename)
                 console.log("File sent successfully")
             }
 
@@ -42,18 +48,74 @@ const FileList = () => {
         .catch(error => console.log("Error occured while sending the file", error))
     }
 
+    const getLocalFiles = () => {
+        fetch("http://127.0.0.1:7878/local-files")
+        .then(response => {
+            if (response.ok) {
+                response.json()
+                .then(content => setLocalFiles(content.files))
+                .catch(error => console.log("Failed to fetch local files", error))
+            }
+
+            else console.log("Fetching local files failed")
+        })
+        .catch(error => console.log("Error occured while fetching local files", error))
+    }
+
     return (
         <>
         <div className="section-container">
-            <div className="notification-container no-files">
-                <h3>No files to transfer</h3>
+            <div className="notification-container">
+                {
+                    (localFiles.length === 0)
+                    ? <h3>No files have been added</h3>
+                    : (
+                        <>
+                        <h3>Your files ({ localFiles.length })</h3>
+                        <CustomLocalFileList fileList={ localFiles }
+                            setFiles={ setLocalFiles }
+                            removeFile={ (filename: string) => {
+                                fetch(`http://127.0.0.1:7878/local-file?file_name=${ filename }`, {
+                                    method: "DELETE"
+                                })
+                                .then(response => {
+                                    if (response.ok) {
+                                        console.log("File removed successfully")
+                                        getLocalFiles()
+                                    }
+
+                                    else console.log(`Removing '${ filename }' file failed`)
+                                })
+                                .catch(error => console.log("Error occured while removing a file:", error))
+                            } }
+                            downloadFile={ (filename: string) => {
+                                fetch(`http://127.0.0.1:7878/download-file?file_name=${ filename }`)
+                                    .then(response => {
+                                        if (response.ok) {
+                                            downloadFile(response.body, filename)
+                                        }
+
+                                        else console.log("Download failed")
+                                    })
+                                    .catch(error => console.log("Error", error))
+                            } }
+                        />
+                        </>
+                    )
+                }
                 <input type="file" name="filepicker" multiple onChange={ handleChange } />
                 <div>
                     <button onClick={ sendFiles }>Send</button>
                 </div>
                 { files.length > 0 && (
                     <div className="list-container">
-                        <CustomList fileList={ files } setFiles={ setFiles } />
+                        <CustomUploadList fileList={ files } 
+                            setFiles={ setFiles }
+                            removeFile={ (fileName: string) => {
+                                const newList = this?.fileList.filter(file => file.name !== fileName)
+                                this?.setFiles(newList)
+                            } }
+                        />
                     </div>
                 ) }
             </div>
@@ -62,12 +124,56 @@ const FileList = () => {
     )
 }
 
-interface ListProps {
-    fileList: Array<object>,
-    setFiles: Function
+const downloadFile = async (stream: ReadableStream, filename: string) => {
+    try {
+        const rs: ReadableStream = stream
+        const blob: Blob = await streamToBlob(rs)
+
+        const blobURL = URL.createObjectURL(blob)
+
+        const downloadLink = document.createElement("a")
+        downloadLink.href = blobURL
+        downloadLink.download = filename
+        downloadLink.style.display = "none"
+
+        console.log("Starting downloading")
+        document.body.appendChild(downloadLink)
+        downloadLink.click()
+
+        document.body.removeChild(downloadLink)
+        URL.revokeObjectURL(blobURL)
+    }
+    catch (error) {
+        console.log("Error occured while processing stream", error)
+    }
 }
 
-const CustomList = (props: ListProps) => {
+const streamToBlob = async (stream: ReadableStream) => {
+    const reader = stream.getReader()
+    const chunks = []
+
+    console.log("Processing stream to blob")
+
+    while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+
+        chunks.push(value)
+    }
+
+    console.log("Blob is ready")
+    
+    return new Blob(chunks)
+}
+
+interface ListProps {
+    fileList: Array<object>,
+    setFiles: Function,
+    removeFile: Function,
+    downloadFile?: Function
+}
+
+const CustomUploadList = (props: ListProps) => {
 
     const formatBytes = (bytes: number, decimals = 2): string => {
         if (bytes === 0) return '0 Bytes'
@@ -81,15 +187,27 @@ const CustomList = (props: ListProps) => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
     }
 
-    const removeFile = (fileName: string) => {
-        const newList = props.fileList.filter(file => file.name !== fileName)
-        props.setFiles(newList)
-    }
+    const itemList = props.fileList.map((item, index) => (
+        <ListItem disablePadding key={ index }>
+            <button onClick={ () => props.removeFile(item.name) }>Remove</button>
+            <ListItemText primary={ `${ item.name } ${ item.type } ${ formatBytes(item.size) }` } />
+        </ListItem>
+    ))
+
+    return (
+        <List>
+            { itemList }
+        </List>
+    )
+}
+
+const CustomLocalFileList = (props: ListProps) => {
 
     const itemList = props.fileList.map((item, index) => (
         <ListItem disablePadding key={ index }>
-            <button onClick={ () => removeFile(item.name) }>Remove</button>
-            <ListItemText primary={ `${ item.name } ${ item.type } ${ formatBytes(item.size) }` } />
+            <button onClick={ () => props.removeFile(item) }>Remove</button>
+            <button onClick={ () => props.downloadFile(item) }>Download</button>
+            <ListItemText primary={ `${ item }` } />
         </ListItem>
     ))
 

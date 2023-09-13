@@ -17,7 +17,7 @@ const FileReceiver = (props: Props) => {
 
     return (
         <div className="section-container">
-            { files.length > 0 && (
+            { (files.length > 0) && (
                 <div className="list-container">
                     { filesReceived }
                 </div>

@@ -60,7 +60,7 @@ const App = () => {
         <DeviceList devices={ devices } />
       </ExtendableContainer>
 
-      <ExtendableContainer header={ <h2>Files</h2> }>
+      <ExtendableContainer header={ <h2>Local files</h2> }>
         <FileList devices={ devices } />
       </ExtendableContainer>
     </>
