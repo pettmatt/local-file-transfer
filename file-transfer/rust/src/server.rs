@@ -1,14 +1,10 @@
 use std::env;
 use dotenv::dotenv;
-use actix_web::{web, http::header, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 use actix_cors::Cors;
 
-use request_services::{frontpage, ping, get_devices, upload_file, download_file, get_local_files, remove_local_file};
-// use process_http_request::handle_request;
-pub mod custom_file;
-
-mod custom_thread;
 mod request_services;
+use request_services::{frontpage, ping, get_devices, upload_file, download_file, get_local_files, remove_local_file};
 
 #[actix_web::main]
 pub async fn setup_server() -> std::io::Result<()> {
@@ -22,11 +18,9 @@ pub async fn setup_server() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         let cors = Cors::default()
-            .allowed_origin("http://127.0.0.1:5173")
+            .allow_any_origin() // Feel free to replace with specific url
+            // .allowed_origin("http://127.0.0.1:5173") // Example how to specify allowed origin url
             .allowed_methods(vec!["GET", "POST", "DELETE"])
-            // .allowed_headers(vec![header::CONTENT_LENGTH, header::ACCEPT])
-            // .allowed_header(header::CONTENT_TYPE)
-            // .allowed_header(header::CONTENT_DISPOSITION)
             .supports_credentials();
 
         App::new()

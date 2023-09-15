@@ -1,5 +1,5 @@
-use server::setup_server;
 mod server;
+use server::setup_server;
 
 #[macro_use]
 extern crate serde_json;
