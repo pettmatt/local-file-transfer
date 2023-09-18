@@ -54,8 +54,8 @@ const FileList = () => {
         .then(response => {
             if (response.ok) {
                 response.json()
-                    .then(content => setLocalFiles(content.files))
-                    .catch(error => console.log("Failed to fetch local files", error))
+                .then(content => setLocalFiles(content.files))
+                .catch(error => console.log("Failed to fetch local files", error))
             }
 
             else console.log("Fetching local files failed")
