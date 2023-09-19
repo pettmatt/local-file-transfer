@@ -5,11 +5,14 @@ import FileReceiver from "./components/file-receiver"
 import ExtendableContainer from "./components/custom-components/extendable-container"
 import AutoExtendableContainer from "./components/custom-components/auto-extendable-container"
 
-import * as http from "./services/http-requests"
+interface Device {
+  name: string
+}
 
 const App = () => {
-  const [devices, setDevices] = useState([])
-  const [filesReceived, setFileReceived] = useState([])
+  const [devices, setDevices] = useState<object[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [filesReceived/*, setFileReceived*/] = useState([])
 
   useEffect(() => {
     fetchDevices()
@@ -17,30 +20,37 @@ const App = () => {
 
   const fetchDevices = () => {
     // The IP should be dynamic
-    http.request("http://127.0.0.1:7878/devices")
-    .then(response => {
-      const responseDevices: Array<object> = response.devices
+    fetch("http://localhost:7878/devices")
+      .then(response => {
+        if (response.ok) return response.json()
 
-      if (devices.length === responseDevices.length) {
+        throw new Error("Response was not OK")
+      })
+      .then(data => {
+        const responseDevices: Array<object> = data.devices
 
-        const newList = new Array(responseDevices.length)
-        newList.push(responseDevices)
+        if (devices.length === responseDevices.length) {
 
-        Array.from(responseDevices).filter(device => {
-          Array.from(devices).map(oldDevice => {
+          const newList = new Array(responseDevices.length)
+          newList.push(responseDevices)
 
-            if (device.name !== oldDevice.name)
-              newList.push(device)
+          Array.from(responseDevices).filter(device => {
+            Array.from(devices).map(oldDevice => {
+              const d = device as Device
+              const od = oldDevice as Device
 
+              if (d.name !== od.name)
+                newList.push(d)
+
+            })
           })
-        })
 
-        setDevices(...newList)
-      }
+          setDevices([...newList])
+        }
 
-      else setDevices(responseDevices)
-    })
-    .catch(error => console.warn("Device fetch error:", error))
+        else setDevices(responseDevices)
+      })
+      .catch(error => console.warn("Device fetch error:", error))
   }
 
   return (

@@ -1,11 +1,12 @@
 import { useState } from "react"
 
 interface Props {
-    fileReceived: any[]
+    fileReceived: File[]
 }
 
 const FileReceiver = (props: Props) => {
-    const [files, setFiles] = useState(props.fileReceived)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [files/*, setFiles*/] = useState(props.fileReceived)
 
     const filesReceived = files.map((file, index) => (
         <div key={ index }>

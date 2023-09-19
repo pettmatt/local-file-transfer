@@ -32,13 +32,21 @@ interface ListProps {
     array: Array<object>
 }
 
+interface Device {
+    name: string
+}
+
 const CustomList = (props: ListProps) => {
     
-    const itemList = props.array.map((item, index) => (
-        <ListItem disablePadding key={ index }>
-            <ListItemText primary={ item.name } />
-        </ListItem>
-    ))
+    const itemList = props.array.map((item, index) => {
+        const device = item as Device
+
+        return (
+            <ListItem disablePadding key={ index }>
+                <ListItemText primary={ device.name } />
+            </ListItem>
+        )
+    })
 
     return (
         <List>
