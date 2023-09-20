@@ -12,7 +12,7 @@ interface Device {
 const App = () => {
   const [devices, setDevices] = useState<object[]>([])
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [filesReceived/*, setFileReceived*/] = useState([])
+  const [filesReceived, setFileReceived] = useState([])
 
   useEffect(() => {
     fetchDevices()

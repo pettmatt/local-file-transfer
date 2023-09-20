@@ -1,12 +1,8 @@
-import React, { useState, ReactNode } from "react"
+import React, { useState } from "react"
 import Collapse from "@mui/material/Collapse"
+import { extendableContainerProps } from "../../interfaces/props"
 
-interface Props {
-    header: ReactNode,
-    children: ReactNode
-}
-
-const ExtendableContainer: React.FC<Props> = (props: Props) => {
+const ExtendableContainer: React.FC<extendableContainerProps> = (props: extendableContainerProps) => {
     const [display, setDisplay] = useState(false)
 
     const handleToggle = () => {

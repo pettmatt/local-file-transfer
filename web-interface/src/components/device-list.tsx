@@ -1,10 +1,7 @@
 import { List, ListItem, ListItemText} from "@mui/material"
+import { deviceListProps, customDeviceListProps, Device } from "../interfaces/props"
 
-interface Props {
-    devices: Array<object>
-}
-
-const DeviceList = (props: Props) => {
+const DeviceList = (props: deviceListProps) => {
 
     return (
         <div className="section-container">
@@ -28,16 +25,8 @@ const DeviceList = (props: Props) => {
     )
 }
 
-interface ListProps {
-    array: Array<object>
-}
+const CustomList = (props: customDeviceListProps) => {
 
-interface Device {
-    name: string
-}
-
-const CustomList = (props: ListProps) => {
-    
     const itemList = props.array.map((item, index) => {
         const device = item as Device
 
