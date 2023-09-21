@@ -2,7 +2,7 @@ import React from "react"
 import Collapse from "@mui/material/Collapse"
 import { extendableContainerProps } from "../../interfaces/props"
 
-const AutoExtendableContainer: React.FC<extendableContainerProps> = (props: extendableContainerProps) => {
+const AutoExtendableContainer = (props: extendableContainerProps) => {
     const [display, setDisplay] = React.useState(false)
 
     const handleChange = () => {

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
+import Settings from "./components/settings"
 import FileList from "./components/file-list"
-import DeviceList from "./components/device-list"
+// import DeviceList from "./components/device-list"
 import FileReceiver from "./components/file-receiver"
 import ExtendableContainer from "./components/custom-components/extendable-container"
-import AutoExtendableContainer from "./components/custom-components/auto-extendable-container"
+import { getServerAddress } from "./services/localStorage"
+// import AutoExtendableContainer from "./components/custom-components/auto-extendable-container"
 
 interface Device {
   name: string
@@ -20,7 +22,7 @@ const App = () => {
 
   const fetchDevices = () => {
     // The IP should be dynamic
-    fetch("http://localhost:7878/devices")
+    fetch(getServerAddress("/devices"))
       .then(response => {
         if (response.ok) return response.json()
 
@@ -55,23 +57,25 @@ const App = () => {
 
   return (
     <>
-      <h1>Transfer file application</h1>
+      <h1>Local file transfer</h1>
 
-      <AutoExtendableContainer header={ <h2>Files received</h2> } manualSwitch={ false }>
+      <Settings />
+
+      <ExtendableContainer header={ <h2>Files received</h2> } manualSwitch={ false }>
         <FileReceiver fileReceived={ filesReceived } />
-      </AutoExtendableContainer>
+      </ExtendableContainer>
 
-      <ExtendableContainer header={
+      {/* <ExtendableContainer header={
         <>
-          <h2>Devices</h2>
+          <h2>Shared</h2>
           <button onClick={ fetchDevices }>Update</button>
         </>
       }>
         <DeviceList devices={ devices } />
-      </ExtendableContainer>
+      </ExtendableContainer> */}
 
-      <ExtendableContainer header={ <h2>Local files</h2> }>
-        <FileList devices={ devices } />
+      <ExtendableContainer header={ <h2>Personal</h2> }>
+        <FileList />
       </ExtendableContainer>
     </>
   )
