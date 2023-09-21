@@ -6,6 +6,7 @@ import { uploadListProps } from "../interfaces/props"
 import { CustomFile } from "../interfaces/file"
 import { downloadFile } from "../services/fileManagement"
 import { getServerAddress } from "../services/localStorage"
+import { formatBytes } from "../services/formatting"
 
 const FileList = () => {
     const [files, setFiles] = useState<File[]>([])
@@ -59,7 +60,10 @@ const FileList = () => {
         .then(response => {
             if (response.ok) {
                 response.json()
-                    .then(content => setLocalFiles(content.files))
+                    .then(content => {
+                        console.log(content)
+                        setLocalFiles(content.files)
+                    })
                     .catch(error => console.log("Failed to fetch local files", error))
             }
 
@@ -139,18 +143,6 @@ const FileList = () => {
 
 const CustomUploadList = (props: uploadListProps) => {
 
-    const formatBytes = (bytes: number, decimals = 2): string => {
-        if (bytes === 0) return '0 Bytes'
-
-        const k = 1024
-        const dm = (decimals < 0) ? 0 : decimals
-        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
-    }
-
     const itemList = props.fileList.map((item, index) => {
         const file = item as CustomFile
 
@@ -170,14 +162,13 @@ const CustomUploadList = (props: uploadListProps) => {
 }
 
 const CustomLocalFileList = (props: uploadListProps) => {
-    const itemList = props.fileList.map((item, index) => {
-        const filename = item
+    const itemList = props.fileList.map((file, index) => {
 
         return (
             <ListItem disablePadding key={ index }>
-                <button onClick={ () => props.removeFile(filename) }>Remove</button>
-                <button onClick={ () => (props.downloadFile) && props.downloadFile(filename) }>Download</button>
-                <ListItemText primary={ `${ filename }` } />
+                <button onClick={ () => props.removeFile(file.name) }>Remove</button>
+                <button onClick={ () => (props.downloadFile) && props.downloadFile(file.name) }>Download</button>
+                <ListItemText primary={ `${ file.name } ${ file.file_type } ${ formatBytes(file.size) }` } />
             </ListItem>
         )
     })

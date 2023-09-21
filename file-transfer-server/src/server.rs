@@ -4,7 +4,7 @@ use actix_web::{web, App, HttpServer};
 use actix_cors::Cors;
 
 mod request_services;
-use request_services::{frontpage, ping, get_devices, upload_file, download_file, get_local_files, remove_local_file};
+use request_services::{frontpage, ping, upload_file, download_file, get_local_files, remove_local_file};
 
 #[actix_web::main]
 pub async fn setup_server() -> std::io::Result<()> {
@@ -27,7 +27,6 @@ pub async fn setup_server() -> std::io::Result<()> {
             .wrap(cors)
             .service(ping)
             .service(frontpage)
-            .service(get_devices)
             .service(get_local_files)
             .service(remove_local_file)
             .service(download_file)
@@ -37,5 +36,4 @@ pub async fn setup_server() -> std::io::Result<()> {
     .bind((String::from(host_address), 7878))?
     .run()
     .await
-
 }

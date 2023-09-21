@@ -12,48 +12,8 @@ interface Device {
 }
 
 const App = () => {
-  const [devices, setDevices] = useState<object[]>([])
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [filesReceived, setFileReceived] = useState([])
-
-  useEffect(() => {
-    fetchDevices()
-  }, [])
-
-  const fetchDevices = () => {
-    // The IP should be dynamic
-    fetch(getServerAddress("/devices"))
-      .then(response => {
-        if (response.ok) return response.json()
-
-        throw new Error("Response was not OK")
-      })
-      .then(data => {
-        const responseDevices: Array<object> = data.devices
-
-        if (devices.length === responseDevices.length) {
-
-          const newList = new Array(responseDevices.length)
-          newList.push(responseDevices)
-
-          Array.from(responseDevices).filter(device => {
-            Array.from(devices).map(oldDevice => {
-              const d = device as Device
-              const od = oldDevice as Device
-
-              if (d.name !== od.name)
-                newList.push(d)
-
-            })
-          })
-
-          setDevices([...newList])
-        }
-
-        else setDevices(responseDevices)
-      })
-      .catch(error => console.warn("Device fetch error:", error))
-  }
 
   return (
     <>

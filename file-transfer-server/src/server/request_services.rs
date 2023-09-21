@@ -6,6 +6,7 @@ use tokio::io::AsyncWriteExt;
 use mime::Mime;
 use tokio::fs;
 use std::path::PathBuf;
+use std::path::Path;
 
 use request_processes::get_local_devices;
 
@@ -28,35 +29,58 @@ pub async fn ping(_ping_address: String) -> impl Responder {
         .json(response)
 }
 
-#[get("/devices")]
-pub async fn get_devices() -> impl Responder {
+// #[get("/devices")]
+// pub async fn get_devices() -> impl Responder {
 
-    // 1) Check devices in the network by pinging to address of the server.
-    //  1.1) If device responds the device has the same application.
-    // 2) Return the retrieved device details.
+//     // 1) Check devices in the network by pinging to address of the server.
+//     //  1.1) If device responds the device has the same application.
+//     // 2) Return the retrieved device details.
 
-    let devices = get_local_devices().unwrap();
+//     let devices = get_local_devices().unwrap();
 
-    let response = json!({
-        "devices": devices
-    });
+//     let response = json!({
+//         "devices": devices
+//     });
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .json(response)
-}
+//     HttpResponse::Ok()
+//         .content_type("application/json")
+//         .json(response)
+// }
 
 #[get("/local-files")]
 pub async fn get_local_files() -> Result<HttpResponse, Error> {
 
-    let mut files: Vec<String> = Vec::new();
+    let mut files: Vec<serde_json::Value> = Vec::new();
     let entries = std::fs::read_dir("./uploads")?;
 
     for entry in entries {
         let entry = entry?;
         let file_name = entry.file_name(); // returns OsString
         let file_name_string = file_name.to_string_lossy();
-        files.push(file_name_string.to_string());
+        let file_path = file_name_string.to_string();
+
+        let metadata = fs::metadata(format!("uploads/{}", file_path)).await?;
+        let file_size = metadata.len();
+    
+        let file_extension = Path::new(&file_path)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("unknown");
+    
+        let mime_type = match file_extension {
+            "txt" => "text/plain",
+            "jpg" | "jpeg" => "image/jpeg",
+            "png" => "image/png",
+            _ => "application/octet-stream",
+        };
+    
+        let file_details = json!({
+            "name": file_name_string.to_string(),
+            "size": file_size,
+            "file_type": mime_type,
+        });
+
+        files.push(file_details);
     }
 
     let response = json!({
@@ -71,8 +95,9 @@ pub async fn get_local_files() -> Result<HttpResponse, Error> {
 }
 
 #[derive(serde::Deserialize, Debug)]
-struct QueryParams {
+pub struct QueryParams {
     file_name: String,
+    owner_name: String,
 }
 
 #[delete("/local-file")]
@@ -82,7 +107,8 @@ pub async fn remove_local_file(query_params: web::Query<QueryParams>) -> Result<
     // 2) Search file with the same name and delete it.
 
     let file_name = &query_params.file_name.to_string();
-    let found_file = check_if_file_exists(&file_name).unwrap();
+    let owner_name = &query_params.owner_name.to_string();
+    let found_file = check_if_file_exists(&file_name, &owner_name).unwrap();
 
     let mut response = json!({
         "message": format!("File '{}' deleted '{}'", file_name, found_file)
@@ -121,7 +147,7 @@ pub async fn remove_local_file(query_params: web::Query<QueryParams>) -> Result<
     )
 }
 
-fn check_if_file_exists(file_name_argument: &String) -> Result<String, Error> {
+fn check_if_file_exists(file_name_argument: &String, owner_name: &String) -> Result<String, Error> {
     let mut found_file = String::from("false");
     let entries = std::fs::read_dir("./uploads")?;
 
@@ -129,6 +155,7 @@ fn check_if_file_exists(file_name_argument: &String) -> Result<String, Error> {
         let entry = entry?;
         let file_name = entry.file_name();
         let file_name_string = file_name.to_string_lossy().to_string();
+        println!("file name string {:?}", file_name_string);
 
         found_file = if &file_name_string == file_name_argument {
             "true".to_string()
@@ -143,15 +170,22 @@ fn check_if_file_exists(file_name_argument: &String) -> Result<String, Error> {
 #[get("/download-file")]
 pub async fn download_file(query_params: web::Query<QueryParams>) -> Result<NamedFile, Error> {
     let file_name = &query_params.file_name.to_string();
+    let owner_name = &query_params.owner_name.trim().to_string();
     let mut path: PathBuf = PathBuf::new();
 
+    // Path should be either "./uploads/{owner_name}/{file_name}" or "./uploads/{file_name}".
     path.push("./uploads/");
+
+    if !owner_name.is_empty() {
+        path.push(format!("{}/", owner_name));
+    }
+
     path.push(file_name);
 
     Ok(NamedFile::open(path)?)
 }
 
-pub async fn upload_file(mut payload: Multipart, _request: HttpRequest) -> Result<HttpResponse, Error> {
+pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
 
     // 1) Receive file.
     // 2) Check if request was "legal".
