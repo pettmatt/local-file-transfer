@@ -56,7 +56,7 @@ const FileList = () => {
     }
 
     const getLocalFiles = () => {
-        fetch(getServerAddress("/local-files"))
+        fetch(getServerAddress(`/local-files?user_name=${ localStorage.getItem("name") }`))
         .then(response => {
             if (response.ok) {
                 response.json()
@@ -162,13 +162,14 @@ const CustomUploadList = (props: uploadListProps) => {
 }
 
 const CustomLocalFileList = (props: uploadListProps) => {
-    const itemList = props.fileList.map((file, index) => {
+    const itemList = props.fileList.map((item, index) => {
+        const file = item as CustomFile
 
         return (
             <ListItem disablePadding key={ index }>
                 <button onClick={ () => props.removeFile(file.name) }>Remove</button>
                 <button onClick={ () => (props.downloadFile) && props.downloadFile(file.name) }>Download</button>
-                <ListItemText primary={ `${ file.name } ${ file.file_type } ${ formatBytes(file.size) }` } />
+                <ListItemText primary={ `${ file.name } ${ file.type } ${ formatBytes(file.size) }` } />
             </ListItem>
         )
     })

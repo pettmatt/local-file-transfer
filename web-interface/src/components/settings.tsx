@@ -54,16 +54,14 @@ const checkIfLocalStorageIsEmpty = (localStorages: string[], placeholders: Local
         const value = localStorage.getItem(storageName)
         const placeholder = placeholders[storageName as keyof LocalStoragePlaceholders]
         const setter = (placeholder as { setter: SetterFunction }).setter
-        
+
         if (value === null) {
             localStorage.setItem(storageName, placeholder.value)
-            if (typeof setter === "function")
-                setter(placeholder.value)
+            setter(placeholder.value)
         }
 
         else {
-            if (typeof setter === "function")
-                setter(value)
+            setter(value)
         }
     })
 }

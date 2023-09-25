@@ -15,7 +15,7 @@ pub mod custom_ip_utils;
 
 #[get("/")]
 pub async fn frontpage() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+    HttpResponse::Ok().body("Hello world! This is the server for local file transfer.")
 }
 
 #[get("/ping")]
@@ -48,40 +48,9 @@ pub async fn ping(_ping_address: String) -> impl Responder {
 // }
 
 #[get("/local-files")]
-pub async fn get_local_files() -> Result<HttpResponse, Error> {
+pub async fn get_local_files(query_params: web::Query<SimpleQueryParams>) -> Result<HttpResponse, Error> {
 
-    let mut files: Vec<serde_json::Value> = Vec::new();
-    let entries = std::fs::read_dir("./uploads")?;
-
-    for entry in entries {
-        let entry = entry?;
-        let file_name = entry.file_name(); // returns OsString
-        let file_name_string = file_name.to_string_lossy();
-        let file_path = file_name_string.to_string();
-
-        let metadata = fs::metadata(format!("uploads/{}", file_path)).await?;
-        let file_size = metadata.len();
-    
-        let file_extension = Path::new(&file_path)
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .unwrap_or("unknown");
-    
-        let mime_type = match file_extension {
-            "txt" => "text/plain",
-            "jpg" | "jpeg" => "image/jpeg",
-            "png" => "image/png",
-            _ => "application/octet-stream",
-        };
-    
-        let file_details = json!({
-            "name": file_name_string.to_string(),
-            "size": file_size,
-            "file_type": mime_type,
-        });
-
-        files.push(file_details);
-    }
+    let files = get_files_from_dir(&PathBuf::from("./uploads")).await?;
 
     let response = json!({
         "files": files
@@ -94,10 +63,83 @@ pub async fn get_local_files() -> Result<HttpResponse, Error> {
     )
 }
 
+async fn get_files_from_dir(dir: &PathBuf) -> std::io::Result<Vec<serde_json::Value>> {
+    // Collect file details in a single list, not data included
+    let mut files: Vec<serde_json::Value> = Vec::new();
+    let mut directories: Vec<PathBuf> = Vec::new();
+
+    directories.push(dir.to_owned());
+
+    while let Some(path) = directories.pop() {
+        for entry in std::fs::read_dir(&path)? {
+            let entry = entry?;
+            let entry_path = entry.path();
+
+            // If the target is not a file, but a directory,
+            // add the path to directory list.
+            if entry_path.is_dir() {
+                directories.push(entry_path)
+            }
+
+            // If file is not a directory, scrape the details and push them to the "files" variable.
+            // Details include: name, size, type and the owner.
+            // Only owner can delete the file, through the API.
+            // Owner is indicated by the name of the directory inside of uploads directory.
+            else {
+                let file_name = entry.file_name(); // returns OsString, we want a string
+                let file_name_string = file_name.to_string_lossy();
+                let file_path = file_name_string.to_string();
+
+                let metadata = fs::metadata(format!("uploads/{}", &file_path)).await?;
+                let file_size = metadata.len();
+
+                let file_extension = Path::new(&file_path)
+                    .extension()
+                    .and_then(|ext| ext.to_str())
+                    .unwrap_or("unknown");
+
+                // Possible media types:
+                // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+                let mime_type = match file_extension {
+                    "txt" => "text/plain",
+                    "jpg" | "jpeg" => "image/jpeg",
+                    "png" => "image/png",
+                    _ => "application/octet-stream",
+                };
+
+                // Check if path contains a directory that contains owner's name.
+                // Example "./uploads/{owner}/{file_name}" print out owner, else "uploads"
+                let owner = match &entry_path.parent() {
+                    Some(parent) => {
+                        if let Some(dir_name) = parent.file_name() {
+                            dir_name.to_string_lossy().to_string()
+                        }
+                        else {
+                            String::from("uploads")
+                        }
+                    }
+                    _ => String::from("uploads")
+                };
+
+                let file_details = json!({
+                    "name": file_name_string,
+                    "size": file_size,
+                    "type": mime_type,
+                    "owner": owner
+                });
+
+                files.push(file_details);
+            }
+        }
+    }
+
+    Ok(files)
+}
+
 #[derive(serde::Deserialize, Debug)]
 pub struct QueryParams {
     file_name: String,
-    owner_name: String,
+    user_name: String,
 }
 
 #[delete("/local-file")]
@@ -107,8 +149,8 @@ pub async fn remove_local_file(query_params: web::Query<QueryParams>) -> Result<
     // 2) Search file with the same name and delete it.
 
     let file_name = &query_params.file_name.to_string();
-    let owner_name = &query_params.owner_name.to_string();
-    let found_file = check_if_file_exists(&file_name, &owner_name).unwrap();
+    let user_name = &query_params.user_name.to_string();
+    let found_file = check_if_file_exists(&file_name, &user_name).unwrap();
 
     let mut response = json!({
         "message": format!("File '{}' deleted '{}'", file_name, found_file)
@@ -155,7 +197,6 @@ fn check_if_file_exists(file_name_argument: &String, owner_name: &String) -> Res
         let entry = entry?;
         let file_name = entry.file_name();
         let file_name_string = file_name.to_string_lossy().to_string();
-        println!("file name string {:?}", file_name_string);
 
         found_file = if &file_name_string == file_name_argument {
             "true".to_string()
@@ -170,7 +211,7 @@ fn check_if_file_exists(file_name_argument: &String, owner_name: &String) -> Res
 #[get("/download-file")]
 pub async fn download_file(query_params: web::Query<QueryParams>) -> Result<NamedFile, Error> {
     let file_name = &query_params.file_name.to_string();
-    let owner_name = &query_params.owner_name.trim().to_string();
+    let owner_name = &query_params.user_name.trim().to_string();
     let mut path: PathBuf = PathBuf::new();
 
     // Path should be either "./uploads/{owner_name}/{file_name}" or "./uploads/{file_name}".
@@ -185,7 +226,12 @@ pub async fn download_file(query_params: web::Query<QueryParams>) -> Result<Name
     Ok(NamedFile::open(path)?)
 }
 
-pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
+#[derive(serde::Deserialize, Debug)]
+pub struct SimpleQueryParams {
+    user_name: String
+}
+
+pub async fn upload_file(mut payload: Multipart, query_params: web::Query<SimpleQueryParams>) -> Result<HttpResponse, Error> {
 
     // 1) Receive file.
     // 2) Check if request was "legal".
@@ -209,7 +255,7 @@ pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, Error> 
 
         let filename = field.content_disposition()
             .get_filename()
-            .unwrap_or("unknown");
+            .unwrap_or("unnamedfile");
 
         let read_result = fs::read_dir("./uploads")
             .await
@@ -226,10 +272,41 @@ pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, Error> 
                         });
                 }
             },
-            _ => println!("Application has existing 'uploads' directory")
+            _ => println!("Application has existing './uploads' directory")
         }
 
-        let filepath = format!("./uploads/{filename}");
+        // check_if_directory_is_created(read_result, &String::from("./uploads"));
+
+        let mut filepath = String::new();
+
+        // Checking if query parameters contain an username and if the program needs to use personalized path.
+        if query_params.user_name.is_empty() {
+            filepath = format!("./uploads/{filename}");
+        }
+        else {
+            let username = query_params.user_name.to_string();
+            let personal_path = format!("./uploads/{username}");
+            let personal_read_result = fs::read_dir(&personal_path)
+                .await
+                .map_err(|error| { error });
+
+            match personal_read_result {
+                Err(err) => {
+                    // Checking if directory was not found, which is identified as code "3"
+                    if err.raw_os_error() == Some(3) {
+                        let _ = fs::create_dir(&personal_path)
+                            .await
+                            .map_err(|error| {
+                                eprintln!("Error creating directory: {:?}", error);
+                            });
+                    }
+                },
+                _ => println!("Application has existing '{personal_path}' directory")
+            }
+
+            // check_if_directory_is_created(personal_read_result, &personal_path);
+            filepath = format!("{personal_path}/{filename}");
+        }
 
         let mut saved_file = fs::File::create(filepath).await.unwrap();
         while let Some(chunk) = field.next().await {
@@ -251,4 +328,8 @@ pub async fn upload_file(mut payload: Multipart) -> Result<HttpResponse, Error> 
             .content_type("application/json")
             .json(response)
     )
+}
+
+async fn check_if_directory_is_created(read_result: Result<fs::ReadDir, std::io::Error>, create_dir_path: &String) {
+    println!("CHECK IF PATH EXISTS {:?}", &create_dir_path);
 }
