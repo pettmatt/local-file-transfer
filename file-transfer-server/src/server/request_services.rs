@@ -48,7 +48,7 @@ pub async fn ping(_ping_address: String) -> impl Responder {
 // }
 
 #[get("/local-files")]
-pub async fn get_local_files(query_params: web::Query<SimpleQueryParams>) -> Result<HttpResponse, Error> {
+pub async fn get_local_files() -> Result<HttpResponse, Error> {
 
     let files = get_files_from_dir(&PathBuf::from("./uploads")).await?;
 
@@ -78,22 +78,24 @@ async fn get_files_from_dir(dir: &PathBuf) -> std::io::Result<Vec<serde_json::Va
             // If the target is not a file, but a directory,
             // add the path to directory list.
             if entry_path.is_dir() {
-                directories.push(entry_path)
+                directories.push(entry_path);
             }
-
+            
             // If file is not a directory, scrape the details and push them to the "files" variable.
             // Details include: name, size, type and the owner.
             // Only owner can delete the file, through the API.
             // Owner is indicated by the name of the directory inside of uploads directory.
             else {
-                let file_name = entry.file_name(); // returns OsString, we want a string
-                let file_name_string = file_name.to_string_lossy();
-                let file_path = file_name_string.to_string();
+                // file_name function returns an OsString, which needs to be converted to a string.
+                let file_name = entry.file_name().to_string_lossy().to_string(); 
+                // There is possibility that the path contains "\\", which can result in "file not found" error.
+                let corrected_path = replace_characters_in_path(entry.path(), "\\", "/");
+                let corrected_path_string = corrected_path.to_string_lossy().to_string();
 
-                let metadata = fs::metadata(format!("uploads/{}", &file_path)).await?;
+                let metadata = fs::metadata(corrected_path_string).await?;
                 let file_size = metadata.len();
 
-                let file_extension = Path::new(&file_path)
+                let file_extension = Path::new(&corrected_path)
                     .extension()
                     .and_then(|ext| ext.to_str())
                     .unwrap_or("unknown");
@@ -111,29 +113,37 @@ async fn get_files_from_dir(dir: &PathBuf) -> std::io::Result<Vec<serde_json::Va
                 // Example "./uploads/{owner}/{file_name}" print out owner, else "uploads"
                 let owner = match &entry_path.parent() {
                     Some(parent) => {
+                        let mut owner = String::from("uploads");
+
                         if let Some(dir_name) = parent.file_name() {
-                            dir_name.to_string_lossy().to_string()
+                            owner = dir_name.to_string_lossy().to_string();
                         }
-                        else {
-                            String::from("uploads")
-                        }
+
+                        owner
                     }
                     _ => String::from("uploads")
                 };
 
                 let file_details = json!({
-                    "name": file_name_string,
+                    "name": file_name,
                     "size": file_size,
                     "type": mime_type,
                     "owner": owner
                 });
-
+                
                 files.push(file_details);
             }
         }
     }
 
     Ok(files)
+}
+
+fn replace_characters_in_path(original_path: PathBuf, replace_character: &str, replace_with: &str) -> PathBuf {
+    let path = original_path.to_string_lossy().to_string();
+    let corrected_string = path.replace(&replace_character, &replace_with);
+    let corrected_path = PathBuf::from(corrected_string);
+    corrected_path
 }
 
 #[derive(serde::Deserialize, Debug)]
