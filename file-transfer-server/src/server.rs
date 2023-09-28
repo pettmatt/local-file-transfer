@@ -30,7 +30,7 @@ pub async fn setup_server() -> std::io::Result<()> {
             .service(get_local_files)
             .service(remove_local_file)
             .service(download_file)
-            .route("/send-file", web::post().to(upload_file))
+            .route("/send", web::post().to(upload_file))
     })
     .workers(4)
     .bind((String::from(host_address), 7878))?

@@ -4,6 +4,7 @@ use std::io::{Read, Write};
 use ipnetwork::Ipv4Network;
 use socket2::{Socket, Domain, Type};
 
+#[allow(dead_code)]
 pub fn get_ip() -> Option<Ipv4Addr> {
     // use std::io::Error;
     use std::process::Command;
@@ -42,6 +43,7 @@ pub fn get_ip() -> Option<Ipv4Addr> {
     None
 }
 
+#[allow(dead_code)]
 pub fn calculate_broadcast_address(ip: Ipv4Addr, subnet_mask: Ipv4Addr) -> Option<Ipv4Addr> {
     let ip_u32 = u32::from(ip);
     let subnet_mask_u32 = u32::from(subnet_mask);
@@ -56,6 +58,7 @@ pub fn calculate_broadcast_address(ip: Ipv4Addr, subnet_mask: Ipv4Addr) -> Optio
     Some(broadcast_address)
 }
 
+#[allow(dead_code)]
 pub fn fetch_device_ips_from_broadcast(broadcast_ip: Ipv4Addr) -> Option<Vec<SocketAddrV4>> {
     // Create UDP socket
     let socket = Socket::new(Domain::IPV4, Type::DGRAM, None).expect("Failed to create socket");

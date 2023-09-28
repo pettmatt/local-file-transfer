@@ -2,8 +2,8 @@ import { useEffect, useState } from "react"
 import { LocalStoragePlaceholders, SetterFunction } from "../interfaces/settings"
 
 const Settings = () => {
-    const [name, setName] = useState("")
     const [address, setAddress] = useState("")
+    const [name, setName] = useState("")
     const [port, setPort] = useState("")
 
     useEffect(() => {
@@ -33,16 +33,21 @@ const Settings = () => {
     }
 
     return (
-        <div>
-            <label htmlFor="name">Name</label>
-            <input type="text" name="name" onChange={ handleChange } />
-            <br/>
-            <label htmlFor="address">Address</label>
-            <input type="text" name="address" onChange={ handleChange } />
-            <label htmlFor="port">Port</label>
-            <input type="number" name="port" onChange={ handleChange } />
-            <p>Name: { name }</p>
-            <p>Server address: { address }{ (port) && ":" }{ port }</p>
+        <div id="settings-container">
+            <div className="settings hidden">
+                <label className="hidden" htmlFor="name">Name</label>
+                User's name is 
+                <input type="text" name="name" onChange={ handleChange } />.
+                <br/>
+                <label className="hidden" htmlFor="address">Address</label>
+                The server is running on 
+                <input type="text" name="address" onChange={ handleChange } />
+                <label className="hidden" htmlFor="port">Port</label>
+                on port 
+                <input type="number" name="port" onChange={ handleChange } />
+                <p>Name: { name }</p>
+                <p>Server address: <a>{ address }{ (port) && ":" }{ port }</a></p>
+            </div>
         </div>
     )
 }

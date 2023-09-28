@@ -4,7 +4,7 @@ export interface fileListProps {
     devices: object
 }
 
-type customFunction = (parameter: string) => void | object
+type customFunction = (filename: string, uploader: string) => void | object
 
 export interface uploadListProps {
     fileList: Array<object>,

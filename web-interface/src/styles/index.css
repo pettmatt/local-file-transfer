@@ -1,0 +1,21 @@
+@import "default.css";
+
+html {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.hidden {
+    display: none;
+}
+
+.header h2 {
+    display: inline;
+}
+
+.extendable {
+    margin: 1rem 0;
+}
+
+a:hover, button:hover, input[type="file"]:hover {
+    cursor: pointer;
+}

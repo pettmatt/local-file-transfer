@@ -11,10 +11,7 @@ const App = () => {
 
       <Settings />
 
-      <ExtendableContainer header={ <h2>Files</h2> }>
-        <FileList />
-      </ExtendableContainer>
-
+      <FileList />
       <FileSender />
     </>
   )
