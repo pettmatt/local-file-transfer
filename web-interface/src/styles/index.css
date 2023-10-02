@@ -1,7 +1,17 @@
 @import "default.css";
+@import "components/file-list.css";
+@import "components/file-sender.css";
+
+body {
+    margin: 0;
+}
 
 html {
     font-family: Arial, Helvetica, sans-serif;
+}
+
+#root {
+    padding: 0 0.75rem;
 }
 
 .hidden {
@@ -16,6 +26,38 @@ html {
     margin: 1rem 0;
 }
 
-a:hover, button:hover, input[type="file"]:hover {
+.transparent-bg {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+a:hover, button:hover, input[type="file"]:hover, .clickable {
     cursor: pointer;
+}
+
+.flex {
+    display: flex;
+    gap: 0.75em;
+}
+
+.column {
+    flex-direction: column;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.center {
+    justify-content: center;
+}
+
+.minimal-width {
+    max-width: 8rem;
+}
+
+@media (min-width: 1100px) {
+    #root {
+        padding-left: 30vw;
+        padding-right: 30vw;
+    }
 }

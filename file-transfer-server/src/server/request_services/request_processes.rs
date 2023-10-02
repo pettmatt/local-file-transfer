@@ -73,9 +73,25 @@ pub async fn get_files_from_dir(dir: &PathBuf) -> std::io::Result<Vec<serde_json
                 // Possible media types:
                 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
                 let mime_type = match file_extension {
-                    "txt" => "text/plain",
+                    "avi" => "video/x-msvideo",
+                    "doc" => "application/msword",
+                    "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "gif" => "image/gif",
+                    "html" | "htm" => "text/html",
                     "jpg" | "jpeg" => "image/jpeg",
+                    "js" => "text/javascript",
+                    "json" => "application/json",
+                    "mp3" => "audio/mpeg",
+                    "mp4" => "video/mp4",
                     "png" => "image/png",
+                    "pdf" => "application/pdf",
+                    "php" => "application/x-httpd-php",
+                    "ppt" => "application/vnd.ms-powerpoint",
+                    "sh" => "application/x-sh",
+                    "txt" => "text/plain",
+                    "rar" => "application/vnd.rar",
+                    "tar" => "application/x-tar",
+                    "zip" => "application/zip",
                     _ => "application/octet-stream",
                 };
 

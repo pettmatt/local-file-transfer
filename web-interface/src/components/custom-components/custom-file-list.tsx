@@ -1,16 +1,18 @@
-import { List, ListItem, ListItemText} from "@mui/material"
 import { formatBytes } from "../../services/formatting"
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline"
+import Chip from "@mui/material/Chip"
+import Stack from "@mui/material/Stack"
 
-type customFunction = (parameter: string) => void | object
+type CustomFunction = (parameter: string) => void | object
 
 interface CustomListProps {
     objectList: Array<object>,
-    removeItem: customFunction
+    removeItem: CustomFunction
 }
 
 interface CustomObject {
     name: string,
-    size: number
+    size: number,
     type: string
 }
 
@@ -20,17 +22,27 @@ const CustomFileList = (props: CustomListProps) => {
         const file = item as CustomObject
 
         return (
-            <ListItem disablePadding key={ index }>
-                <button onClick={ () => props.removeItem(file.name) }>Remove</button>
-                <ListItemText primary={ `${ file.name } ${ file.type } ${ formatBytes(file.size) }` } />
-            </ListItem>
+            <li key={ index }>
+                <div className="button">
+                    <Stack>
+                        <Chip label={ <RemoveCircleOutlineIcon /> } className="transparent-bg"
+                            onClick={ () => props.removeItem(file.name) }
+                        />
+                    </Stack>
+                </div>
+                <div className="details">
+                    <h3>{ file.name }</h3>
+                    <span className="type">{ file.type }</span>&nbsp;
+                    <span className="size">{ formatBytes(file.size) }</span>
+                </div>
+            </li>
         )
     })
 
     return (
-        <List>
+        <ul>
             { itemList }
-        </List>
+        </ul>
     )
 }
 

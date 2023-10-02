@@ -32,5 +32,6 @@ export interface Device {
 export interface extendableContainerProps {
     header: ReactNode,
     children: ReactNode,
+    showOnLoad: boolean,
     manualSwitch?: boolean
 }

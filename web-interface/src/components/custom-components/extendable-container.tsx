@@ -3,7 +3,7 @@ import Collapse from "@mui/material/Collapse"
 import { extendableContainerProps } from "../../interfaces/props"
 
 const ExtendableContainer: React.FC<extendableContainerProps> = (props: extendableContainerProps) => {
-    const [display, setDisplay] = useState(false)
+    const [display, setDisplay] = useState(props.showOnLoad)
 
     const handleToggle = () => {
         setDisplay((value) => !value)

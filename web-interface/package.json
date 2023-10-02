@@ -16,6 +16,7 @@
     "@fontsource/roboto": "^5.0.8",
     "@mui/icons-material": "^5.14.3",
     "@mui/joy": "^5.0.0-beta.2",
+    "@mui/lab": "^5.0.0-alpha.146",
     "@mui/material": "^5.14.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

@@ -5,16 +5,19 @@ import useFetchFilesHook from "../hooks/fetchFilesHook"
 
 const FileSender = () => {
     const [files, setFiles] = useState<File[]>([])
+    const [dragging, setDragging] = useState(false)
     const { activate } = useFetchFilesHook()
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const inputFiles: FileList | null = event.target.files
-
+        createNewFileArray(inputFiles)
+        event.target.value = ""
+    }
+    
+    const createNewFileArray = (inputFiles: FileList | null) => {
         const newArray = Array.from(inputFiles as FileList).filter(newFile =>
             !files.some((existingFiles: File) => existingFiles.name === newFile.name)
         )
-
-        event.target.value = ""
 
         setFiles(prevFiles => [...prevFiles , ...newArray])
     }
@@ -49,22 +52,48 @@ const FileSender = () => {
         .catch(error => console.log("Error occured while sending the file", error))
     }
 
+    const onDragEnter = () => {
+        setDragging(true)
+    }
+    
+    const onDragExit = () => {
+        setDragging(false)
+    }
+
+    const onDrop = (event: React.DragEvent) => {
+        event.preventDefault()
+        const fileList: FileList | null = event.dataTransfer.files
+
+        createNewFileArray(fileList)
+        setDragging(false)
+    }
+
     return (
-        <div id="file-sender-container">
-            <input type="file" name="filepicker" multiple onChange={ handleChange } />
-            <div>
-                <button onClick={ sendFiles }>Send</button>
+        <div className={`container file-sender drag-highlight ${ (dragging) && "show-highlight" }`} 
+            onDragEnter={ onDragEnter } onDragExit={ onDragExit } onDrop={ onDrop }>
+            <div className="custom-file-input flex column center">
+                <h3>Drop files here</h3>
+                <span>or</span>
+                <label htmlFor="filepicker">
+                    <button type="button" className="minimal-width">Press here</button>
+                </label>
+                <input className="hidden" type="file" id="filepicker" multiple onChange={ handleChange } />
             </div>
-            { files.length > 0 && (
+
+            { (files.length > 0) && (
+                <>
+                <h3>Files selected: { files.length }</h3>
                 <div className="list-container">
                     <CustomFileList objectList={ files }
                         removeItem={ (filename: string) => {
                             const newList = files.filter(file => file.name !== filename)
                             setFiles(newList)
                         } }
-                    />
+                        />
                 </div>
+                </>
             ) }
+            { (files.length > 0) && <button onClick={ sendFiles }>Send files</button> }
         </div>
     )
 }
