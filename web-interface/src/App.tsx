@@ -1,9 +1,10 @@
 import Settings from "./components/settings"
 import FileList from "./components/file-list"
 import FileSender from "./components/file-sender"
-import ExtendableContainer from "./components/custom-components/extendable-container"
+import useFetchFilesHook from "./hooks/fetchFilesHook"
 
 const App = () => {
+  const { fetchFiles, activate, deactivate } = useFetchFilesHook()
 
   return (
     <>
@@ -11,8 +12,8 @@ const App = () => {
 
       <Settings />
 
-      <FileList />
-      <FileSender />
+      <FileList fileHook={ { fetchFiles, activate, deactivate } } />
+      <FileSender fileHook={ { fetchFiles, activate, deactivate } } />
     </>
   )
 }

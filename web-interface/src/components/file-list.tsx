@@ -10,13 +10,20 @@ import { downloadFile } from "../services/fileManagement"
 import { getServerAddress } from "../services/localStorage"
 import { formatBytes } from "../services/formatting"
 import { CustomFile } from "../interfaces/file"
-import useFetchFilesHook from "../hooks/fetchFilesHook"
 import LinearProgressBar from "./custom-components/linearProgressBar"
 
-const FileList = () => {
+interface Props {
+    fileHook: {
+        fetchFiles: boolean,
+        activate: () => void,
+        deactivate: () => void
+    }
+}
+
+const FileList = (props: Props) => {
     const [localFiles, setLocalFiles] = useState([])
     const [connectionError, setConnectionError] = useState(false)
-    const { fetchFiles, activate, deactivate } = useFetchFilesHook()
+    const { fetchFiles, activate, deactivate } = props.fileHook
 
     useEffect(() => {
         // Fetch files whenever the hook is activated
@@ -93,23 +100,27 @@ const FileList = () => {
                                         })
                                         .catch(error => console.log("Error occured while removing a file:", error))
                                 } }
-                                downloadFile={ (filename: string | object, uploader: string, loadingSetter: React.Dispatch<React.SetStateAction<boolean>>) => {
+                                downloadFile={ (filename: string | object, uploader: string, loadingSetter: React.Dispatch<React.SetStateAction<any>>) => {
                                     loadingSetter(true)
                                     fetch(getServerAddress(`/download?file_name=${ filename }&username=${ uploader }`))
                                         .then(response => {
                                             if (response.ok) {
-                                                downloadFile(response.body, filename)
-                                                loadingSetter(false)
+                                                downloadFile(
+                                                    response.body,
+                                                    filename,
+                                                    Number(response.headers.get("content-length")),
+                                                    loadingSetter
+                                                )
                                             }
 
                                             else {
                                                 console.log("Download failed")
-                                                loadingSetter(false)
+                                                loadingSetter(null)
                                             }
                                         })
                                         .catch(error => {
                                             console.log("Download error:", error)
-                                            loadingSetter(false)
+                                            loadingSetter(null)
                                         })
                                 } }
                             />
@@ -160,13 +171,13 @@ const CustomLocalFileList = (props: uploadListProps) => {
 
 export default FileList
 
-interface Props {
+interface ListItemProps {
     index: number,
     file: CustomFile
 }
 
-const ListItem = (props: uploadListProps & Props) => {
-    const [loading, setLoading] = useState(false)
+const ListItem = (props: uploadListProps & ListItemProps) => {
+    const [progress, setProgress] = useState(null)
     const file = props.file
 
     return (
@@ -177,7 +188,7 @@ const ListItem = (props: uploadListProps & Props) => {
                         onClick={ () => props.removeFile(file.name, file.owner) }
                     />
                     <Chip label={ <DownloadIcon /> } className="button download"
-                        onClick={ () => (props.downloadFile) && (props.downloadFile(file.name, file.owner, setLoading)) }
+                        onClick={ () => (props.downloadFile) && (props.downloadFile(file.name, file.owner, setProgress)) }
                     />
                 </Stack>
             </div>
@@ -185,8 +196,8 @@ const ListItem = (props: uploadListProps & Props) => {
                 <h3>{ file.name }</h3>
                 <span className="type">{ file.type }</span>&nbsp;
                 <span className="size">{ formatBytes(file.size) }</span>
-                { (loading) &&
-                    <LinearProgressBar value={ 0 } />
+                { (progress !== null) &&
+                    <LinearProgressBar value={ progress } />
                 }
             </div>
         </li>

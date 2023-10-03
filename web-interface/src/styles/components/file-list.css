@@ -1,0 +1,57 @@
+.container .section-container {
+    max-height: 35vh;
+    overflow-y: scroll;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 0;
+    text-align: left;
+}
+
+ul li {
+    margin: 0.75rem 0;
+    display: flex;
+    flex-direction: row;
+}
+
+ul li h3 {
+    margin: 0;
+    margin-bottom: 0.3em;
+}
+
+ul li .details {
+    margin-left: 0.75rem;
+}
+
+ul li .MuiStack-root {
+    display: flex;
+    flex-direction: row;
+}
+
+ul li .MuiStack-root, ul li .MuiStack-root .MuiButtonBase-root {
+    background-color: rgba(0,0,0,0);
+    justify-content: center;
+    height: 100%;
+}
+
+ul li .button .MuiButtonBase-root {
+    border-radius: 2rem;
+}
+
+ul li .MuiButtonBase-root .MuiChip-label {
+    margin: 0 auto;
+    font-size: 2rem;
+}
+
+.details h3 {
+    margin-bottom: 0.3em;
+}
+
+.files-container .details span, .list-container .details span {
+    padding-right: 0.25rem;
+}
+
+.file-sender-container {
+    background-color: #000;
+}

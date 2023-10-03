@@ -102,10 +102,14 @@ pub async fn download_file(request: HttpRequest, query_params: web::Query<QueryP
     
     // Path should be either "./uploads/{owner_name}/{file_name}" or "./uploads/{file_name}".
     let mut path: PathBuf = PathBuf::new();
+
     path.push("./uploads/");
 
     if !owner_name.is_empty() {
-        path.push(format!("{}/", owner_name));
+        // When user uploads files without a name it's uploaded as "uploads"
+        if owner_name != "uploads" {
+            path.push(format!("{}/", owner_name));
+        }
     }
 
     path.push(file_name);

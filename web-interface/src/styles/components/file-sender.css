@@ -1,0 +1,33 @@
+.file-sender {
+    padding: 1rem;
+}
+
+.file-sender h3 {
+    margin: 0;
+}
+
+.file-sender .list-container ul {
+    max-height: 32vh;
+    overflow-y: scroll;
+}
+
+.drag-highlight {
+    border: 0.4em solid rgba(0, 0, 0, 0);
+    border-radius: 0.5rem;
+}
+
+.show-highlight {
+    border-color: #000;
+}
+
+.file-sender .custom-file-input h3 {
+    margin: 0;
+}
+
+.file-sender button {
+    width: 10rem;
+}
+
+.file-sender .custom-file-input {
+    text-align: center;
+}

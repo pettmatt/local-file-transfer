@@ -18,6 +18,10 @@ html {
     max-height: 47vh;
 }
 
+.non-targetable {
+    pointer-events: none;
+}
+
 .hidden {
     display: none;
 }

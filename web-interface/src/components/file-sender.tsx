@@ -2,14 +2,21 @@ import { useState, useRef, ChangeEvent } from "react"
 import LoadingButton from "@mui/lab/LoadingButton"
 import { getServerAddress } from "../services/localStorage"
 import CustomFileList from "./custom-components/custom-file-list"
-import useFetchFilesHook from "../hooks/fetchFilesHook"
 
-const FileSender = () => {
+interface Props {
+    fileHook: {
+        fetchFiles: boolean,
+        activate: () => void,
+        deactivate: () => void
+    }
+}
+
+const FileSender = (props: Props) => {
     const [files, setFiles] = useState<File[]>([])
     const [dragging, setDragging] = useState(false)
     const [sending, setSending] = useState(false)
     const fileInputRef = useRef(null)
-    const { activate } = useFetchFilesHook()
+    const { activate } = props.fileHook
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const inputFiles: FileList | null = event.target.files
@@ -91,11 +98,11 @@ const FileSender = () => {
     return (
         <div className={`container file-sender drag-highlight ${ (dragging) && "show-highlight" }`} 
             onDragEnter={ onDragEnter } onDragExit={ onDragExit } onDrop={ onDrop }>
-            <div className="custom-file-input flex column center">
-                <h3>Drop files here</h3>
-                <span>or</span>
-                <div className="button-container">
-                    <button type="button" className="minimal-width" onClick={ activateFilepickerOnClick } disabled={ sending }>
+            <div className={`custom-file-input flex column center ${ (dragging) && "non-targetable" }`}>
+                <h3 className={`${ (dragging) && "non-targetable" }`}>Drop files here</h3>
+                <span  className={`${ (dragging) && "non-targetable" }`}>or</span>
+                <div className={`button-container ${ (dragging) && "non-targetable" }`}>
+                    <button type="button" className={`minimal-width ${ (dragging) && "non-targetable" }`} onClick={ activateFilepickerOnClick } disabled={ sending }>
                         Press here
                     </button>
                 </div>

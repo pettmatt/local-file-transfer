@@ -69,15 +69,3 @@ export const deleteFile = (filename: string, setLocalFiles: React.Dispatch<React
     })
     .catch(error => console.log("Error occured while removing a file:", error))
 }
-
-// export const downloadFile = (filename: string | object) => {
-//     fetch(getServerAddress(`/download-file?file_name=${ filename }`))
-//     .then(response => {
-//         if (response.ok) {
-//             downloadFile(response.body, filename)
-//         }
-
-//         else console.log("Download failed")
-//     })
-//     .catch(error => console.log("Error", error))
-// }
