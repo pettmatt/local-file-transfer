@@ -1,3 +1,7 @@
+.container .MuiCollapse-root {
+    overflow-y: scroll;
+}
+
 button {
     padding: 0.75em;
     border: 0rem solid #000;

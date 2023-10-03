@@ -11,9 +11,11 @@ import { getServerAddress } from "../services/localStorage"
 import { formatBytes } from "../services/formatting"
 import { CustomFile } from "../interfaces/file"
 import useFetchFilesHook from "../hooks/fetchFilesHook"
+import LinearProgressBar from "./custom-components/linearProgressBar"
 
 const FileList = () => {
     const [localFiles, setLocalFiles] = useState([])
+    const [connectionError, setConnectionError] = useState(false)
     const { fetchFiles, activate, deactivate } = useFetchFilesHook()
 
     useEffect(() => {
@@ -29,13 +31,24 @@ const FileList = () => {
                     response.json()
                         .then(content => {
                             setLocalFiles(content.files)
+                            setConnectionError(false)
                         })
-                        .catch(error => console.log("Failed to fetch files", error))
+                        .catch(error => {
+                            // If the fetch operation fails the API isn't possibly running correctly
+                            console.log("Failed to fetch files", error)
+                            setConnectionError(true)
+                        })
                 }
 
-                else console.log("Fetching local files failed", response)
+                else {
+                    console.log("Fetching local files failed", response)
+                    setConnectionError(true)
+                }
             })
-            .catch(error => console.log("Error occured while fetching files", error))
+            .catch(error => {
+                console.log("Error occured while fetching files", error)
+                setConnectionError(true)
+            })
     }
 
     return (
@@ -45,7 +58,16 @@ const FileList = () => {
                 <div className="files-container">
                     {
                         (localFiles.length === 0)
-                        ? <h3>No files have been added</h3>
+                        ? (
+                            <div className="file-message">
+                                <h3>No files found</h3>
+                                { (connectionError) && (
+                                    <p>
+                                        Seems like the API doesn't respond with expected response. Please make sure the API is set correctly and is running.
+                                    </p>
+                                )}
+                            </div>
+                        )
                         : (
                             <>
                             <CustomLocalFileList fileList={ localFiles }
@@ -71,17 +93,24 @@ const FileList = () => {
                                         })
                                         .catch(error => console.log("Error occured while removing a file:", error))
                                 } }
-                                downloadFile={ (filename: string | object, uploader: string) => {
+                                downloadFile={ (filename: string | object, uploader: string, loadingSetter: React.Dispatch<React.SetStateAction<boolean>>) => {
+                                    loadingSetter(true)
                                     fetch(getServerAddress(`/download?file_name=${ filename }&username=${ uploader }`))
                                         .then(response => {
                                             if (response.ok) {
                                                 downloadFile(response.body, filename)
-                                                activate()
+                                                loadingSetter(false)
                                             }
 
-                                            else console.log("Download failed")
+                                            else {
+                                                console.log("Download failed")
+                                                loadingSetter(false)
+                                            }
                                         })
-                                        .catch(error => console.log("Download error:", error))
+                                        .catch(error => {
+                                            console.log("Download error:", error)
+                                            loadingSetter(false)
+                                        })
                                 } }
                             />
                             </>
@@ -95,35 +124,92 @@ const FileList = () => {
 }
 
 const CustomLocalFileList = (props: uploadListProps) => {
-    const itemList = props.fileList.map((item, index) => {
-        const file = item as CustomFile
+    const rootFolder = "uploads"
+    const list = separateByProperty(props.fileList, "owner")
 
-        return (
-            <li key={ index } className="file-list-item">
-                <div className="buttons">
-                    <Stack>
-                        <Chip label={ <DeleteIcon /> } className="button delete bg-red"
-                            onClick={ () => props.removeFile(file.name, file.owner) }
-                        />
-                        <Chip label={ <DownloadIcon /> } className="button download bg-blue"
-                            onClick={ () => (props.downloadFile) && props.downloadFile(file.name, file.owner) }
-                        />
-                    </Stack>
-                </div>
-                <div className="details">
-                    <h3>{ file.name }</h3>
-                    <span className="type">{ file.type }</span>&nbsp;
-                    <span className="size">{ formatBytes(file.size) }</span>
-                </div>
-            </li>
+    const listElements = list.map((childList, index1) => {
+
+        const listedItems = childList.map((item, index2) => {
+            const file = item as CustomFile
+            return <ListItem index={ index2 } file={ file } removeFile={ props.removeFile } downloadFile={ props.downloadFile } />
+        })
+
+        const owner = childList[0].owner
+
+        const finalList = (owner !== rootFolder)
+        ? (
+            <ExtendableContainer header={ <h2>{ owner } ({ childList.length })</h2> } showOnLoad={ true } key={ index1 }>
+                { listedItems }
+            </ExtendableContainer>
         )
+        : (
+            <ExtendableContainer header={ <h2>root ({ childList.length })</h2> } showOnLoad={ true }>
+                { listedItems }
+            </ExtendableContainer>
+        )
+
+        return finalList
     })
 
     return (
         <ul className="file-list">
-            { itemList }
+            { listElements }
         </ul>
     )
 }
 
 export default FileList
+
+interface Props {
+    index: number,
+    file: CustomFile
+}
+
+const ListItem = (props: uploadListProps & Props) => {
+    const [loading, setLoading] = useState(false)
+    const file = props.file
+
+    return (
+        <li key={ props.index } className="file-list-item">
+            <div className="buttons">
+                <Stack>
+                    <Chip label={ <DeleteIcon /> } className="button delete"
+                        onClick={ () => props.removeFile(file.name, file.owner) }
+                    />
+                    <Chip label={ <DownloadIcon /> } className="button download"
+                        onClick={ () => (props.downloadFile) && (props.downloadFile(file.name, file.owner, setLoading)) }
+                    />
+                </Stack>
+            </div>
+            <div className="details">
+                <h3>{ file.name }</h3>
+                <span className="type">{ file.type }</span>&nbsp;
+                <span className="size">{ formatBytes(file.size) }</span>
+                { (loading) &&
+                    <LinearProgressBar value={ 0 } />
+                }
+            </div>
+        </li>
+    )
+}
+
+const separateByProperty = (list: Array<any>, property: string) => {
+    const lists = {}
+
+    list.forEach(item => {
+      const prop = item[property]
+
+      // Check if the list includes a list based on the property value
+      if (!lists[prop]) {
+        lists[prop] = []
+      }
+  
+      // Push the item to the corresponding list
+      lists[prop].push(item)
+    })
+  
+    // Convert the lists object to an array of lists
+    const result = Object.values(lists)
+  
+    return result
+}

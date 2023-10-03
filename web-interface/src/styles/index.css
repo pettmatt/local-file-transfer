@@ -14,6 +14,10 @@ html {
     padding: 0 0.75rem;
 }
 
+#root .container {
+    max-height: 47vh;
+}
+
 .hidden {
     display: none;
 }
@@ -55,7 +59,7 @@ a:hover, button:hover, input[type="file"]:hover, .clickable {
     max-width: 8rem;
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 900px) {
     #root {
         padding-left: 30vw;
         padding-right: 30vw;

@@ -1,4 +1,5 @@
-import { useState, ChangeEvent } from "react"
+import { useState, useRef, ChangeEvent } from "react"
+import LoadingButton from "@mui/lab/LoadingButton"
 import { getServerAddress } from "../services/localStorage"
 import CustomFileList from "./custom-components/custom-file-list"
 import useFetchFilesHook from "../hooks/fetchFilesHook"
@@ -6,6 +7,8 @@ import useFetchFilesHook from "../hooks/fetchFilesHook"
 const FileSender = () => {
     const [files, setFiles] = useState<File[]>([])
     const [dragging, setDragging] = useState(false)
+    const [sending, setSending] = useState(false)
+    const fileInputRef = useRef(null)
     const { activate } = useFetchFilesHook()
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -23,6 +26,8 @@ const FileSender = () => {
     }
 
     const sendFiles = () => {
+        setSending(true)
+
         const formData: FormData = new FormData()
 
         files.map((file: Blob, index) => {
@@ -45,11 +50,19 @@ const FileSender = () => {
                 activate()
 
                 console.log("File sent successfully")
+                setSending(false)
             }
 
-            else throw Error("Sending the file failed")
+            else {
+                setSending(false)
+                throw Error("Sending the file failed")
+            }
         })
-        .catch(error => console.log("Error occured while sending the file", error))
+        .catch(error => {
+            console.log("Error occured while sending the file", error)
+            setSending(false)
+        })
+
     }
 
     const onDragEnter = () => {
@@ -68,16 +81,25 @@ const FileSender = () => {
         setDragging(false)
     }
 
+    const activateFilepickerOnClick = () => {
+        // A lot cleaner than the label trick to click a hidden input element
+        if (fileInputRef.current) {
+            fileInputRef.current.click()
+        }
+    }
+
     return (
         <div className={`container file-sender drag-highlight ${ (dragging) && "show-highlight" }`} 
             onDragEnter={ onDragEnter } onDragExit={ onDragExit } onDrop={ onDrop }>
             <div className="custom-file-input flex column center">
                 <h3>Drop files here</h3>
                 <span>or</span>
-                <label htmlFor="filepicker">
-                    <button type="button" className="minimal-width">Press here</button>
-                </label>
-                <input className="hidden" type="file" id="filepicker" multiple onChange={ handleChange } />
+                <div className="button-container">
+                    <button type="button" className="minimal-width" onClick={ activateFilepickerOnClick } disabled={ sending }>
+                        Press here
+                    </button>
+                </div>
+                <input ref={ fileInputRef } className="hidden" type="file" id="filepicker" multiple onChange={ handleChange } />
             </div>
 
             { (files.length > 0) && (
@@ -93,7 +115,12 @@ const FileSender = () => {
                 </div>
                 </>
             ) }
-            { (files.length > 0) && <button onClick={ sendFiles }>Send files</button> }
+            { (files.length > 0) && 
+                <LoadingButton onClick={ sendFiles } size="medium" variant="outlined" color="primary"
+                    loading={ sending } disabled={ sending } loadingPosition="start">
+                        Upload
+                </LoadingButton>
+            }
         </div>
     )
 }

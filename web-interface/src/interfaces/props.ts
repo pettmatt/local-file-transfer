@@ -4,13 +4,13 @@ export interface fileListProps {
     devices: object
 }
 
-type customFunction = (filename: string, uploader: string) => void | object
+type customFunction = (filename: string, uploader: string, setter?: React.Dispatch<React.SetStateAction<any>>) => void | object
 
 export interface uploadListProps {
-    fileList: Array<object>,
-    setFiles: React.Dispatch<React.SetStateAction<never[]>> | React.Dispatch<React.SetStateAction<File[]>>,
-    removeFile: customFunction,
-    downloadFile?: customFunction
+    fileList?: Array<object>,
+    setFiles?: React.Dispatch<React.SetStateAction<never[]>> | React.Dispatch<React.SetStateAction<File[]>>,
+    removeFile?: customFunction,
+    downloadFile?: customFunction,
 }
 
 export interface fileReceiverProps {
