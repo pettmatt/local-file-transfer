@@ -7,7 +7,8 @@ type CustomFunction = (parameter: string) => void | object
 
 interface CustomListProps {
     objectList: Array<object>,
-    removeItem: CustomFunction
+    removeItem: CustomFunction,
+    disableButton: boolean
 }
 
 interface CustomObject {
@@ -25,7 +26,7 @@ const CustomFileList = (props: CustomListProps) => {
             <li key={ index }>
                 <div className="button">
                     <Stack>
-                        <Chip label={ <RemoveCircleOutlineIcon /> } className="transparent-bg"
+                        <Chip label={ <RemoveCircleOutlineIcon /> } className="transparent-bg" disabled={ props.disableButton }
                             onClick={ () => props.removeItem(file.name) }
                         />
                     </Stack>

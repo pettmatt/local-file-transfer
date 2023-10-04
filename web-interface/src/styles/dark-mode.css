@@ -27,3 +27,7 @@ button {
     background-color: var(--background-light) !important;
     color: var(--font-color);
 }
+
+.show-highlight {
+    border-color: var(--font-color);
+}

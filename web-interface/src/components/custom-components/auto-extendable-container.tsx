@@ -10,7 +10,7 @@ const AutoExtendableContainer = (props: extendableContainerProps) => {
     }
 
     return (
-        <div className="container extendable">
+        <div className="container extendable" key={ (props.key) ? props.key : "" }>
             { props.manualSwitch && (
                 <div className="header clickable" onClick={ () => handleChange }>
                     { props.header }

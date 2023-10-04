@@ -33,5 +33,6 @@ export interface extendableContainerProps {
     header: ReactNode,
     children: ReactNode,
     showOnLoad: boolean,
-    manualSwitch?: boolean
+    manualSwitch?: boolean,
+    key?: number
 }

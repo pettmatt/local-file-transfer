@@ -1,6 +1,24 @@
-@media (min-width: 1200px) {
-    #root {
-        padding-left: 30vw;
-        padding-right: 30vw;
+@media (max-width: 800px) {
+    #root > .container {
+        max-height: 45%;
+    }
+
+    #root > .file-sender-list {
+        max-height: 50%;
+    }
+
+    .extendable .extendable {
+        padding-left: 0;
+        word-break: break-all;
+    }
+    
+    .file-sender {
+        padding: 0;
+        margin-top: 0;
+        min-height: 4rem;
+    }
+
+    .overlay {
+        width: 60%;
     }
 }

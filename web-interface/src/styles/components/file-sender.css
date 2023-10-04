@@ -1,11 +1,7 @@
 .file-sender {
     margin-top: 2rem;
     padding: 1rem;
-}
-
-.file-sender .list-container {
-    max-height: 27vh;
-    overflow-y: scroll;
+    min-height: 6rem;
 }
 
 .drag-highlight {

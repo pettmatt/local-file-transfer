@@ -150,19 +150,19 @@ const CustomLocalFileList = (props: uploadListProps) => {
 
         const listedItems = childList.map((item, index2) => {
             const file = item as CustomFile
-            return <ListItem index={ index2 } file={ file } removeFile={ props.removeFile } downloadFile={ props.downloadFile } />
+            return <ListItem key={ index2 } file={ file } removeFile={ props.removeFile } downloadFile={ props.downloadFile } />
         })
 
         const owner = childList[0].owner
 
         const finalList = (owner !== rootFolder)
         ? (
-            <ExtendableContainer header={ <h2>{ owner } ({ childList.length })</h2> } showOnLoad={ true } key={ index1 }>
+            <ExtendableContainer key={ index1 } header={ <h2>{ owner } ({ childList.length })</h2> } showOnLoad={ true }>
                 { listedItems }
             </ExtendableContainer>
         )
         : (
-            <ExtendableContainer header={ <h2>root ({ childList.length })</h2> } showOnLoad={ true }>
+            <ExtendableContainer key={ index1 } header={ <h2>root ({ childList.length })</h2> } showOnLoad={ true }>
                 { listedItems }
             </ExtendableContainer>
         )
@@ -180,16 +180,15 @@ const CustomLocalFileList = (props: uploadListProps) => {
 export default FileList
 
 interface ListItemProps {
-    index: number,
     file: CustomFile
 }
 
-const ListItem = (props: uploadListProps & ListItemProps) => {
+const ListItem = (props: uploadListProps & ListItemProps & { key: number }) => {
     const [progress, setProgress] = useState(null)
     const file = props.file
 
     return (
-        <li key={ props.index } className="file-list-item">
+        <li key={ props.key } className="file-list-item">
             <div className="buttons">
                 <Stack>
                     <Chip label={ <DeleteIcon /> } className="button delete"

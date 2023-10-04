@@ -36,3 +36,79 @@ button {
 .settings-container .settings-details span {
     font-weight: bold;
 }
+
+body {
+    margin: 0;
+}
+
+html {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#root {
+    margin: 0 0.75rem;
+    height: 100vh;
+}
+
+#root > .container {
+    max-height: 32%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.non-targetable {
+    pointer-events: none;
+}
+
+.hidden {
+    display: none;
+}
+
+.transparent-bg {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+a:hover, button:hover, input[type="file"]:hover, .clickable {
+    cursor: pointer;
+}
+
+.flex {
+    display: flex;
+    gap: 0.75em;
+}
+
+.column {
+    flex-direction: column;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.center {
+    justify-content: center;
+}
+
+.minimal-width {
+    max-width: 8rem;
+}
+
+.overlay {
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 30%;
+    z-index: 100;
+    text-align: left;
+    padding: 1rem 10vw;
+    position: absolute;
+    border-radius: 0.2em;
+    border: 0.2em solid #eee;
+    background-color: #fafafa;
+}
+
+@media (min-width: 1200px) {
+    #root {
+        padding-left: 10vw;
+        padding-right: 10vw;
+    }
+}

@@ -104,22 +104,25 @@ const FileSender = (props: Props) => {
     }
 
     return (
-        <div className={`container file-sender drag-highlight ${ (dragging) && " show-highlight" }`} 
+        <>
+        <div className={`file-sender drag-highlight${ (dragging) ? " show-highlight" : "" }`} 
             onDragEnter={ onDragEnter } onDragExit={ onDragExit } onDrop={ onDrop }>
-            <div className={`custom-file-input flex column centerplacehol${ (dragging) ? " non-targetable" : "" }der`}>
+            <div className={`custom-file-input flex column`}>
                 { (!isMobile)
                 ? (
-                    <>
-                    <h3 className={`${ (dragging) ? "non-targetable" : "" }`}>Drop files here</h3>
-                    <span  className={`${ (dragging) ? "non-targetable" : "" }`}>or</span>
-                    <div className={`button-containerplacehol${ (dragging) ? " non-targetable" : "" }der`}>
-                        <button type="button" className={`minimal-width${ (dragging) ? " non-targetable" : "" }`} 
-                            onClick={ activateFilepickerOnClick } disabled={ sending }>
-                            Press here
-                        </button>
-                    </div>
-                    <input ref={ fileInputRef } className="hidden" type="file" id="filepicker" multiple onChange={ handleChange } />
-                    </>
+                    (!dragging) && (
+                        <>
+                        <h3>Drop files here</h3>
+                        <span>or</span>
+                        <div className="button-container">
+                            <button type="button" className="minimal-width" 
+                                onClick={ activateFilepickerOnClick } disabled={ sending }>
+                                Press here
+                            </button>
+                        </div>
+                        <input ref={ fileInputRef } className="hidden" type="file" id="filepicker" multiple onChange={ handleChange } />
+                        </>
+                    )
                 )
                 : (
                     <div className={`button-containerplacehol${ (dragging) ? " non-targetable" : "" }der`}>
@@ -130,12 +133,14 @@ const FileSender = (props: Props) => {
                     </div>
                 ) }
             </div>
+        </div>
 
+        <div className="file-sender-list container">
             { (files.length > 0) && (
                 <>
                 <h3>Files selected: { files.length }</h3>
                 <div className="list-container">
-                    <CustomFileList objectList={ files }
+                    <CustomFileList objectList={ files } disableButton={ sending }
                         removeItem={ (filename: string) => {
                             const newList = files.filter(file => file.name !== filename)
                             setFiles(newList)
@@ -144,13 +149,14 @@ const FileSender = (props: Props) => {
                 </div>
                 </>
             ) }
-            { (files.length > 0) && 
-                <LoadingButton onClick={ sendFiles } size="medium" variant="outlined" color="primary"
-                    loading={ sending } disabled={ sending }>
-                        Upload
-                </LoadingButton>
-            }
         </div>
+        { (files.length > 0) && 
+            <LoadingButton onClick={ sendFiles } size="medium" variant="outlined" color="primary"
+                loading={ sending } disabled={ sending }>
+                    Upload
+            </LoadingButton>
+        }
+        </>
     )
 }
 
