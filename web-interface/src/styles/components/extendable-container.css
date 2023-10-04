@@ -1,0 +1,13 @@
+.extendable {
+    margin: 0;
+}
+
+.extendable h2 {
+    margin: 0;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+}
+
+.extendable .extendable {
+    padding-left: 0.5em;
+}

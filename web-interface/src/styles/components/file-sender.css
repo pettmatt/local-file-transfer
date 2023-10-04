@@ -1,13 +1,10 @@
 .file-sender {
+    margin-top: 2rem;
     padding: 1rem;
 }
 
-.file-sender h3 {
-    margin: 0;
-}
-
-.file-sender .list-container ul {
-    max-height: 32vh;
+.file-sender .list-container {
+    max-height: 27vh;
     overflow-y: scroll;
 }
 

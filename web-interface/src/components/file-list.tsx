@@ -31,6 +31,14 @@ const FileList = (props: Props) => {
         deactivate()
     }, [fetchFiles])
 
+    useEffect(() => {
+        const fileUpdateInterval = setInterval(() => {
+            activate()
+        }, 5000)
+
+        return () => clearInterval(fileUpdateInterval)
+    }, [])
+
     const getLocalFiles = () => {
         fetch(getServerAddress(`/files`))
             .then(response => {

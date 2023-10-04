@@ -1,5 +1,7 @@
-.container .MuiCollapse-root {
-    overflow-y: scroll;
+.header {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
 }
 
 button {
@@ -10,16 +12,27 @@ button {
     margin: 0.5rem 0.25rem;
 }
 
-#settings-container input[type="text"], #settings-container input[type="number"] {
-    border: 0;
-    border-bottom: 0.2rem solid black;
-    margin: 0 0.5rem;
+.settings div:last-of-type {
+    text-align: center;
 }
 
-.red {
-    background-color: #d10202;
+.settings div {
+    margin: 0.5rem 0;
 }
 
-.blue {
-    background-color: rgb(68, 0, 255);
+.settings label {
+    display: block;
+    width: 3rem;
+    margin: 0.25rem 0;
+}
+
+.settings-container input[type="text"], .settings-container input[type="number"] {
+    border: 0.1em solid #000;
+    padding: 0.25rem;
+    border-radius: 0.2em;
+    width: 100%;
+}
+
+.settings-container .settings-details span {
+    font-weight: bold;
 }

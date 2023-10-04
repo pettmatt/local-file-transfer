@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent } from "react"
+import { useState, useRef, ChangeEvent, useEffect } from "react"
 import LoadingButton from "@mui/lab/LoadingButton"
 import { getServerAddress } from "../services/localStorage"
 import CustomFileList from "./custom-components/custom-file-list"
@@ -15,8 +15,16 @@ const FileSender = (props: Props) => {
     const [files, setFiles] = useState<File[]>([])
     const [dragging, setDragging] = useState(false)
     const [sending, setSending] = useState(false)
+    const [isMobile, setIsMobile] = useState(false)
     const fileInputRef = useRef(null)
     const { activate } = props.fileHook
+
+    useEffect(() => {
+        // Because this component has some elements that are only relevant to
+        // desktop we need to check if user uses mobile device or not.
+        const isMobileDevice = window.matchMedia("(max-width: 900px)").matches
+        setIsMobile(isMobileDevice)
+    }, [])
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const inputFiles: FileList | null = event.target.files
@@ -49,33 +57,33 @@ const FileSender = (props: Props) => {
             method: "POST",
             body: formData
         })
-        .then(response => {
-            if (response.ok) {
-                setFiles([])
+            .then(response => {
+                if (response.ok) {
+                    setFiles([])
 
-                // On success activate file fetching hook
-                activate()
+                    // On success activate file fetching hook
+                    activate()
 
-                console.log("File sent successfully")
+                    console.log("File sent successfully")
+                    setSending(false)
+                }
+
+                else {
+                    setSending(false)
+                    throw Error("Sending the file failed")
+                }
+            })
+            .catch(error => {
+                console.log("Error occured while sending the file", error)
                 setSending(false)
-            }
-
-            else {
-                setSending(false)
-                throw Error("Sending the file failed")
-            }
-        })
-        .catch(error => {
-            console.log("Error occured while sending the file", error)
-            setSending(false)
-        })
+            })
 
     }
 
     const onDragEnter = () => {
         setDragging(true)
     }
-    
+
     const onDragExit = () => {
         setDragging(false)
     }
@@ -96,17 +104,31 @@ const FileSender = (props: Props) => {
     }
 
     return (
-        <div className={`container file-sender drag-highlight ${ (dragging) && "show-highlight" }`} 
+        <div className={`container file-sender drag-highlight ${ (dragging) && " show-highlight" }`} 
             onDragEnter={ onDragEnter } onDragExit={ onDragExit } onDrop={ onDrop }>
-            <div className={`custom-file-input flex column center ${ (dragging) && "non-targetable" }`}>
-                <h3 className={`${ (dragging) && "non-targetable" }`}>Drop files here</h3>
-                <span  className={`${ (dragging) && "non-targetable" }`}>or</span>
-                <div className={`button-container ${ (dragging) && "non-targetable" }`}>
-                    <button type="button" className={`minimal-width ${ (dragging) && "non-targetable" }`} onClick={ activateFilepickerOnClick } disabled={ sending }>
-                        Press here
-                    </button>
-                </div>
-                <input ref={ fileInputRef } className="hidden" type="file" id="filepicker" multiple onChange={ handleChange } />
+            <div className={`custom-file-input flex column centerplacehol${ (dragging) ? " non-targetable" : "" }der`}>
+                { (!isMobile)
+                ? (
+                    <>
+                    <h3 className={`${ (dragging) ? "non-targetable" : "" }`}>Drop files here</h3>
+                    <span  className={`${ (dragging) ? "non-targetable" : "" }`}>or</span>
+                    <div className={`button-containerplacehol${ (dragging) ? " non-targetable" : "" }der`}>
+                        <button type="button" className={`minimal-width${ (dragging) ? " non-targetable" : "" }`} 
+                            onClick={ activateFilepickerOnClick } disabled={ sending }>
+                            Press here
+                        </button>
+                    </div>
+                    <input ref={ fileInputRef } className="hidden" type="file" id="filepicker" multiple onChange={ handleChange } />
+                    </>
+                )
+                : (
+                    <div className={`button-containerplacehol${ (dragging) ? " non-targetable" : "" }der`}>
+                        <button type="button" className={`minimal-width${ (dragging) ? " non-targetable" : "" }`} 
+                            onClick={ activateFilepickerOnClick } disabled={ sending }>
+                            Add files
+                        </button>
+                    </div>
+                ) }
             </div>
 
             { (files.length > 0) && (
@@ -124,7 +146,7 @@ const FileSender = (props: Props) => {
             ) }
             { (files.length > 0) && 
                 <LoadingButton onClick={ sendFiles } size="medium" variant="outlined" color="primary"
-                    loading={ sending } disabled={ sending } loadingPosition="start">
+                    loading={ sending } disabled={ sending }>
                         Upload
                 </LoadingButton>
             }

@@ -1,0 +1,6 @@
+@media (min-width: 1200px) {
+    #root {
+        padding-left: 30vw;
+        padding-right: 30vw;
+    }
+}

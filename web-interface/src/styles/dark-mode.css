@@ -1,0 +1,29 @@
+:root {
+    --background-dark: #2b2a33;
+    --background-light: #42414d;
+    --font-color: #9a97b4;
+}
+
+body,
+.overlay {
+    background-color: var(--background-dark);
+    color: var(--font-color);
+    border-color: var(--font-color);
+}
+
+input {
+    background-color: var(--background-light);
+    color: var(--font-color);
+}
+
+.buttons .MuiChip-label,
+.button .MuiChip-label,
+.MuiButtonBase-root {
+    color: var(--font-color);
+    border-color: var(--font-color);
+}
+
+button {
+    background-color: var(--background-light);
+    color: var(--font-color);
+}

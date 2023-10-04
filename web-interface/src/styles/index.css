@@ -1,6 +1,8 @@
 @import "default.css";
 @import "components/file-list.css";
 @import "components/file-sender.css";
+@import "components/extendable-container.css";
+@import "./mobile.css";
 
 body {
     margin: 0;
@@ -11,11 +13,7 @@ html {
 }
 
 #root {
-    padding: 0 0.75rem;
-}
-
-#root .container {
-    max-height: 47vh;
+    margin: 0 0.75rem;
 }
 
 .non-targetable {
@@ -24,14 +22,6 @@ html {
 
 .hidden {
     display: none;
-}
-
-.header h2 {
-    display: inline;
-}
-
-.extendable {
-    margin: 1rem 0;
 }
 
 .transparent-bg {
@@ -63,9 +53,15 @@ a:hover, button:hover, input[type="file"]:hover, .clickable {
     max-width: 8rem;
 }
 
-@media (min-width: 900px) {
-    #root {
-        padding-left: 30vw;
-        padding-right: 30vw;
-    }
+.overlay {
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 30%;
+    z-index: 100;
+    text-align: left;
+    padding: 1rem 10vw;
+    position: absolute;
+    border-radius: 0.2em;
+    border: 0.2em solid #eee;
+    background-color: #fafafa;
 }
