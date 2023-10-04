@@ -24,6 +24,6 @@ input {
 }
 
 button {
-    background-color: var(--background-light);
+    background-color: var(--background-light) !important;
     color: var(--font-color);
 }

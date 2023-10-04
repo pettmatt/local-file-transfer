@@ -78,7 +78,7 @@ const FileList = (props: Props) => {
                                 <h3>No files found</h3>
                                 { (connectionError) && (
                                     <p>
-                                        Seems like the API doesn't respond with expected response. Please make sure the API is set correctly and is running.
+                                        Seems like the server doesn't respond with expected response. Please make sure the server is set correctly and is running.
                                     </p>
                                 )}
                             </div>

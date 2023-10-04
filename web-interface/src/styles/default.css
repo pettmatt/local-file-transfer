@@ -5,11 +5,11 @@
 }
 
 button {
-    padding: 0.75em;
-    border: 0rem solid #000;
-    border-radius: 2rem;
-    background-color: #e9e9e9;
-    margin: 0.5rem 0.25rem;
+    padding: 0.75em !important;
+    border: 0rem solid #000 !important;
+    border-radius: 2rem !important;
+    background-color: #e9e9e9 !important;
+    margin: 0.5rem 0.25rem !important;
 }
 
 .settings div:last-of-type {
