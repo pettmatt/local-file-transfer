@@ -1,0 +1,35 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ "web" ]
+
+env:
+  THREAD_POOL_COUNT: 2
+  HOST_ADDRESS: 127.0.0.1
+  HOST_PORT: 7878
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build 🔧
+      run: |
+        cd file-transfer-server
+        cargo build --release
+    - name: Run tests 🔬
+      run: |
+        cd file-transfer-server
+        cargo test --verbose
+    - name: Package 📦
+      run: |
+        cd file-transfer-server
+        zip -r lft-server-release.zip target/release/
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Server release 🎉
+        path: file-transfer-server/lft-server-release.zip
+        
