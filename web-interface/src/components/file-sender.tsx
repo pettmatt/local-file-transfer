@@ -1,7 +1,7 @@
 import { useState, useRef, ChangeEvent, useEffect } from "react"
 import LoadingButton from "@mui/lab/LoadingButton"
 import { getServerAddress } from "../services/localStorage"
-import CustomFileList from "./custom-components/custom-file-list"
+import UploaderFileList from "./component-parts/uploader-file-list"
 
 interface Props {
     fileHook: {
@@ -140,7 +140,7 @@ const FileSender = (props: Props) => {
                 <>
                 <h3>Files selected: { files.length }</h3>
                 <div className="list-container">
-                    <CustomFileList objectList={ files } disableButton={ sending }
+                    <UploaderFileList fileList={ files } disableButton={ sending }
                         removeItem={ (filename: string) => {
                             const newList = files.filter(file => file.name !== filename)
                             setFiles(newList)
