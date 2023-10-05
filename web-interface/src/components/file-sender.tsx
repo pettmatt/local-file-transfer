@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent, useEffect } from "react"
+import { useState, useRef, RefObject, ChangeEvent, useEffect } from "react"
 import LoadingButton from "@mui/lab/LoadingButton"
 import { getServerAddress } from "../services/localStorage"
 import UploaderFileList from "./component-parts/uploader-file-list"
@@ -16,7 +16,7 @@ const FileSender = (props: Props) => {
     const [dragging, setDragging] = useState(false)
     const [sending, setSending] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
-    const fileInputRef = useRef(null)
+    const fileInputRef: RefObject<HTMLInputElement> = useRef(null)
     const { activate } = props.fileHook
 
     useEffect(() => {
@@ -108,29 +108,21 @@ const FileSender = (props: Props) => {
         <div className={`file-sender drag-highlight${ (dragging) ? " show-highlight" : "" }`} 
             onDragEnter={ onDragEnter } onDragExit={ onDragExit } onDrop={ onDrop }>
             <div className={`custom-file-input flex column`}>
-                { (!isMobile)
-                ? (
-                    (!dragging) && (
+                { (!dragging) && (
+                    <>
+                    { (!isMobile) && (
                         <>
                         <h3>Drop files here</h3>
                         <span>or</span>
-                        <div className="button-container">
-                            <button type="button" className="minimal-width" 
-                                onClick={ activateFilepickerOnClick } disabled={ sending }>
-                                Press here
-                            </button>
-                        </div>
-                        <input ref={ fileInputRef } className="hidden" type="file" id="filepicker" multiple onChange={ handleChange } />
                         </>
-                    )
-                )
-                : (
-                    <div className={`button-containerplacehol${ (dragging) ? " non-targetable" : "" }der`}>
-                        <button type="button" className={`minimal-width${ (dragging) ? " non-targetable" : "" }`} 
-                            onClick={ activateFilepickerOnClick } disabled={ sending }>
-                            Add files
+                    ) }
+                    <div className="button-container">
+                        <button className="minimal-width" onClick={ activateFilepickerOnClick } disabled={ sending }>
+                            { (!isMobile) ? "Press here" : "Add files" }
                         </button>
                     </div>
+                    <input ref={ fileInputRef } className="hidden" type="file" id="filepicker" multiple onChange={ handleChange } />
+                    </>
                 ) }
             </div>
         </div>

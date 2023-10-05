@@ -8,7 +8,7 @@ const DownloaderFileList = (props: uploadListProps) => {
     const fileList = props.fileList
     const list = separateByProperty(fileList, "owner")
 
-    const listElements = (list as Array<object[]>).map((childList: object[], index) => {
+    const listElements = (list as Array<CustomFile[]>).map(childList => {
 
         const listedItems = childList.map((item: object, childIndex) => {
             const file = item as CustomFile
@@ -41,14 +41,20 @@ const DownloaderFileList = (props: uploadListProps) => {
 
 export default DownloaderFileList
 
+type customFileType = {
+    [key: string]: object[]
+}
 
 const separateByProperty = (list: Array<object> | undefined, property: string) => {
-    const lists = {}
+    const lists: customFileType = {}
 
-    if (!list) return
+    if (!list) return list
 
     list.forEach(item => {
-        const prop = item[property]
+        const file = item as CustomFile
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const prop = file[property]
 
         // Check if the list includes a list based on the property value
         if (!lists[prop]) {

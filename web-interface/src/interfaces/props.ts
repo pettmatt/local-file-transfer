@@ -4,8 +4,11 @@ export interface fileListProps {
     devices: object
 }
 
-type customFunction = (filename: string, uploader: string, 
-    setState?: React.Dispatch<React.SetStateAction<string | object | number>>) => void | object
+type customFunction = (
+    filename: string,
+    uploader: string,
+    setState?: React.Dispatch<React.SetStateAction<null>>
+) => void | object
 
 export interface uploadListProps {
     fileList?: Array<object>,

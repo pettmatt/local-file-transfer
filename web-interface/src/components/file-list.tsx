@@ -21,15 +21,7 @@ const FileList = (props: Props) => {
         // Fetch files whenever the hook is activated
         getLocalFiles()
         deactivate()
-    }, [fetchFiles])
-
-    useEffect(() => {
-        const fileUpdateInterval = setInterval(() => {
-            activate()
-        }, 5000)
-
-        return () => clearInterval(fileUpdateInterval)
-    }, [])
+    }, [fetchFiles, deactivate])
 
     const getLocalFiles = () => {
         fetch(getServerAddress(`/files`))
@@ -60,7 +52,14 @@ const FileList = (props: Props) => {
 
     return (
         <>
-        <ExtendableContainer header={ <h2>Files ({ localFiles.length })</h2> } showOnLoad={ true }>
+        <ExtendableContainer header={
+            <>
+                <h2>Files ({ localFiles.length })</h2>
+                <button onClick={ () => {
+                    activate()
+                } }>Update</button>
+            </>
+            } showOnLoad={ true }>
             <div className="section-container">
                 <div className="files-container">
                     {
@@ -100,6 +99,8 @@ const FileList = (props: Props) => {
                                         })
                                         .catch(error => console.log("Error occured while removing a file:", error))
                                 } }
+                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                // @ts-ignore
                                 downloadFile={ (filename: string, uploader: string, loadingSetter: React.Dispatch<React.SetStateAction<boolean | null>>) => {
                                     loadingSetter(true)
                                     fetch(getServerAddress(`/download?file_name=${ filename }&username=${ uploader }`))

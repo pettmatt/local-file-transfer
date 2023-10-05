@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, ChangeEvent, useMemo } from "react"
 import { LocalStoragePlaceholders, SetterFunction } from "../interfaces/settings"
 import SettingsIcon from "@mui/icons-material/Settings"
 
@@ -8,32 +8,39 @@ const Settings = () => {
     const [name, setName] = useState("")
     const [port, setPort] = useState("")
 
-    useEffect(() => {
-        checkIfLocalStorageIsEmpty(localStorages, placeholderValues)
+    const localStorages = useMemo(() => {
+        return ["name", "address", "port"]
     }, [])
 
-    const handleChange = (event) => {
-        const target = event.target
-        const value = target.value
-        localStorage.setItem(target.name, value)
-        placeholderValues[target.name].setter(value)
+    const placeholderValues: LocalStoragePlaceholders = useMemo(() => {
+        return {
+            name: {
+                value: "",
+                setter: (value) => setName(value)
+            },
+            address: {
+                value: "http://127.0.0.1",
+                setter: (value) => setAddress(value)
+            },
+            port: {
+                value: "7878",
+                setter: (value) => setPort(value)
+            }
+        }
+    }, [setName, setAddress, setPort])
+
+    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const name = event.target.name
+        const value = event.target.value
+        localStorage.setItem(name, value)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        placeholderValues[name].setter(value)
     }
 
-    const localStorages = ["name", "address", "port"]
-    const placeholderValues: LocalStoragePlaceholders = {
-        name: {
-            value: "",
-            setter: (value) => setName(value)
-        },
-        address: {
-            value: "http://127.0.0.1",
-            setter: (value) => setAddress(value)
-        },
-        port: {
-            value: "7878",
-            setter: (value) => setPort(value)
-        }
-    }
+    useEffect(() => {
+        checkIfLocalStorageIsEmpty(localStorages, placeholderValues)
+    }, [localStorages, placeholderValues])
 
     return (
         <div className="settings-container">
