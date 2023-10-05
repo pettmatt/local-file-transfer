@@ -1,0 +1,51 @@
+name: React CI
+
+on:
+  push:
+    branches:
+      - web
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Install Dependencies 
+      run: |
+        cd web-interface
+        npm install
+
+    - name: Build React 🔧
+      run: |
+        cd web-interface
+        npm run build
+
+    - name: Push to GitHub Pages
+      run: |
+        cd web-interface
+        git config --global user.email "petterimattila@protonmail.com"
+        git config --global user.name "pettmatt"
+        git branch -D gh-pages || true
+        git checkout --orphan gh-pages
+        git --work-tree build add --all
+        git --work-tree build commit -m "GitHub Pages"
+        git push origin HEAD:gh-pages --force
+
+    - name: Zip React Build 📦
+      run: |
+        cd web-interface
+        zip -r web-interface-release.zip build/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: web-interface-release
+        path: web-interface/web-interface-release.zip
