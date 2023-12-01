@@ -10,12 +10,13 @@ use request_services::{frontpage, ping, upload_file, download_file, get_local_fi
 pub async fn setup_server() -> std::io::Result<()> {
     dotenv().ok();
 
-    let port: String = env::var("HOST_PORT").expect("Host port not defined through the env variable \"HOST_PORT\"");
+    // let string_port: String = env::var("HOST_PORT").expect("Host port not defined through the env variable \"HOST_PORT\"");
     let host_address: String = env::var("HOST_ADDRESS").expect("Host address not defined through the env variable \"HOST_ADDRESS\"");
     let workers: String = env::var("THREAD_POOL_COUNT").expect("Workers count not defined through the env variable \"THREAD_POOL_COUNT\"");
     let workers_numeric_value: u32 = workers.trim().parse().unwrap();
+    // let port: i32 = string_port.parse().unwrap();
 
-    println!("Server is running on http://{host_address}:{port}");
+    println!("Server is running on http://{host_address}:7878");
 
     HttpServer::new(|| {
         let cors = Cors::default()
@@ -34,7 +35,7 @@ pub async fn setup_server() -> std::io::Result<()> {
             .route("/send", web::post().to(upload_file))
     })
     .workers(workers_numeric_value.try_into().unwrap())
-    .bind((String::from(host_address), 7878))?
+    .bind((host_address, 7878))?
     .run()
     .await
 }
