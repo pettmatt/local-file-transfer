@@ -34,6 +34,8 @@ pub async fn check_if_file_exists(file_name_argument: &String, owner_name: &Stri
 }
 
 pub async fn get_files_from_dir(dir: &PathBuf) -> std::io::Result<Vec<serde_json::Value>> {
+    check_and_create_file_dir().await;
+
     // Collect file details in a single list, not data included
     let mut files: Vec<serde_json::Value> = Vec::new();
     let mut directories: Vec<PathBuf> = Vec::new();
@@ -145,7 +147,7 @@ pub async fn process_payload(mut payload: Multipart, query_params: web::Query<Si
     let mut files_created = Vec::new();
     let mut file_count = 0;
 
-    while let Some(mut field) = payload.next().await {
+    while let Some(field) = payload.next().await {
         let mut field = field?;
         file_count = file_count + 1;
 
@@ -158,26 +160,7 @@ pub async fn process_payload(mut payload: Multipart, query_params: web::Query<Si
             .get_filename()
             .unwrap_or("unnamedfile");
 
-        // Creating and verifying the API uses specific directory structure.
-        // 1) personal path: ./uploads/{username}/{filename}
-        // 2) root path: ./uploads/{filename}
-        let _read_result = fs::read_dir("./uploads")
-            .await
-            .map_err(|error| { error });
-
-        match _read_result {
-            Err(err) => {
-                // Checking if directory was not found, which is identified as code "3"
-                if err.raw_os_error() == Some(3) {
-                    let _ = fs::create_dir("./uploads")
-                        .await
-                        .map_err(|error| {
-                            eprintln!("Error creating directory: {:?}", error);
-                        });
-                }
-            },
-            _ => println!("Application has existing './uploads' directory")
-        }
+        check_and_create_file_dir().await;
 
         // check_if_directory_is_created(read_result, &String::from("./uploads"));
 
@@ -235,6 +218,29 @@ pub fn validate_username(username: &String) -> String {
         String::from("")
     } else {
         username.to_string()
+    }
+}
+
+async fn check_and_create_file_dir() {
+    // Creating and verifying the API uses specific directory structure.
+    // 1) personal path: ./uploads/{username}/{filename}
+    // 2) root path: ./uploads/{filename}
+    let read_result = fs::read_dir("./uploads")
+        .await
+        .map_err(|error| { error });
+
+    match read_result {
+        Err(err) => {
+            // Checking if directory was not found, which is identified as code "3"
+            if err.raw_os_error() == Some(3) || err.raw_os_error() == Some(2) {
+                let _ = fs::create_dir("./uploads")
+                    .await
+                    .map_err(|error| {
+                        eprintln!("Error creating directory: {:?}", error);
+                    });
+            }
+        },
+        _ => println!("Application has existing './uploads' directory")
     }
 }
 
