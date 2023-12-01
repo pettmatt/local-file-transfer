@@ -124,7 +124,7 @@ pub struct SimpleQueryParams {
 }
 
 // POST /send
-pub async fn upload_file(mut payload: Multipart, query_params: web::Query<SimpleQueryParams>) -> Result<HttpResponse, Error> {
+pub async fn upload_file(payload: Multipart, query_params: web::Query<SimpleQueryParams>) -> Result<HttpResponse, Error> {
 
     let (files_created, file_count) = process_payload(payload, query_params).await?;
 
