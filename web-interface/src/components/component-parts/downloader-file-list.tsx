@@ -8,26 +8,26 @@ const DownloaderFileList = (props: uploadListProps) => {
     const fileList = props.fileList
     const list = separateByProperty(fileList, "owner")
 
-    const listElements = (list as Array<CustomFile[]>).map(childList => {
+    const listElements = (list as Array<CustomFile[]>).map((childList, index) => {
 
         const listedItems = childList.map((item: object, childIndex) => {
             const file = item as CustomFile
-            return <ListItem index={ childIndex } file={ file } removeFile={ props.removeFile } downloadFile={ props.downloadFile } />
+            return <ListItem key={ childIndex } file={ file } removeFile={ props.removeFile } downloadFile={ props.downloadFile } />
         })
 
         const owner: string = childList[0].owner
 
         const finalList = (owner !== rootFolder)
-        ? (
-            <ExtendableContainer header={ <h2>{ owner } ({ childList.length })</h2> } showOnLoad={ true }>
-                { listedItems }
-            </ExtendableContainer>
-        )
-        : (
-            <ExtendableContainer header={ <h2>root ({ childList.length })</h2> } showOnLoad={ true }>
-                { listedItems }
-            </ExtendableContainer>
-        )
+            ? (
+                <ExtendableContainer key={ index } header={ <h2>{ owner } ({ childList.length })</h2> } showOnLoad={ true }>
+                    { listedItems }
+                </ExtendableContainer>
+            )
+            : (
+                <ExtendableContainer key={ index } header={ <h2>root ({ childList.length })</h2> } showOnLoad={ true }>
+                    { listedItems }
+                </ExtendableContainer>
+            )
 
         return finalList
     })

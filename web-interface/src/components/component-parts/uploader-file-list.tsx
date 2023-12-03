@@ -24,7 +24,7 @@ const UploaderFileList = (props: CustomListProps) => {
         const file = item as CustomObject
 
         return (
-            <li key={ index }>
+            <li key={ "u" + index }>
                 <div className="button">
                     <Stack>
                         <Chip label={ <RemoveCircleOutlineIcon /> } className="transparent-bg" disabled={ props.disableButton }

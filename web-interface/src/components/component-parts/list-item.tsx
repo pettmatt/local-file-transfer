@@ -9,17 +9,15 @@ import { formatBytes } from "../../services/formatting"
 import LinearProgressBar from "../custom-components/linearProgressBar"
 
 interface ListItemProps {
-    file: CustomFile,
-    index: number
+    file: CustomFile
 }
 
 const ListItem = (props: uploadListProps & ListItemProps) => {
     const [progress, setProgress] = useState(null)
     const file = props.file
-    const index = props.index
 
     return (
-        <li key={ index } className="file-list-item">
+        <li className="file-list-item">
             <div className="buttons">
                 <Stack>
                     <Chip label={ <DeleteIcon /> } className="button delete"
