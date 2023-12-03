@@ -1,19 +1,12 @@
-FROM rust:latest as builder
+FROM rust:1.73.0
 
-WORKDIR /usr/src/server
+WORKDIR /usr/src/file-transfer-server
 COPY Cargo.toml Cargo.lock ./
+RUN mkdir src/
 
-# Fetch dependencies in dummy project
-RUN mkdir src && echo "fn main() {}" > src/main.rs
+COPY src/ ./src/
+# build the application
 RUN cargo build --release
 
-COPY . .
-RUN cargo build --release
-
-FROM alpine:latest
-WORKDIR /usr/src/server
-
-COPY --from=builder /usr/src/server/target/release/file-transfer-server .
 EXPOSE 7878
-
-CMD ["./file-transfer-server"]
+CMD ["./target/release/file-transfer-server"]
