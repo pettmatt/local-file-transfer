@@ -49,8 +49,9 @@ docker build -t web-interface .
 docker run -p 5173 web-interface
 ```
 
-### Rust
+### File transfer server
+
 ```cmd
 docker build -t file-server .
-docker run -e HOST_ADDRESS=0.0.0.0 -e THREAD_POOL_COUNT=1 -p 7878:7878 file-server
+docker run -e HOST_ADDRESS=0.0.0.0 -e THREAD_POOL_COUNT=1 -p 7878 file-server
 ```
