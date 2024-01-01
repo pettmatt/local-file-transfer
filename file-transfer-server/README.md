@@ -2,7 +2,7 @@
 
 ## Starting the server
 
-If you want to use the "ready to use" version of the server, you can download it from [Github in the releases section](https://github.com/pettmatt/local-file-transfer), which contains the binary versions of the server and the web interface. You can start the server by clicking the "file-transfer-server.exe" file. Because the exe file doesn't install anything on the machine, it just starts the application, the server needs to be manually started. Note that the application can be blocked by firewalls, you might need to expose the port manually to your local network and the final host address depends on the host machine. Final note, the exe file just opens a terminal and shows the address that the server is hosted on, by closing this terminal you close the server
+You can start the server by executing the "file-transfer-server.exe" file after compiling the binaries. Note that the application can be blocked by firewalls, you might need to expose the port manually to your local network and the final host address depends on the host machine. Final note, the exe file just opens a terminal and shows the address that the server is hosted on, by closing this terminal you close the server.
 
 If you're not a tinkerer you can ignore the instructions below.
 
